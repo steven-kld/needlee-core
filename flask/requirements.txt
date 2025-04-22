@@ -1,0 +1,13 @@
+flask
+requests
+bcrypt
+protobuf==3.20.*
+pydub
+grpcio-tools
+google-cloud-storage
+google-api-python-client 
+google-auth-httplib2 
+google-auth-oauthlib
+psycopg2-binary
+openai
+yandex-speechkit
