@@ -20,8 +20,6 @@ def interview_session():
 
     manager = InterviewManager(org_id, interview_id, contact, uuid)
     response, code = manager.get_initial_response()
-    if code == 200 and not response.get("completed"):
-        manager.prepare_async()
 
     return jsonify(response), code
 
@@ -31,12 +29,13 @@ def get_questions_route():
     org_id = data.get("o")
     interview_id = data.get("i")
     uuid = data.get("uuid")
+    respondent_exists = data.get("respondent_exists")
 
     if not org_id or not interview_id or not uuid:
         return jsonify({"error": "Missing required fields"}), 400
 
-    qm = QuestionsManager(org_id, interview_id, uuid)
-    attempt = qm.get_latest_attempt_number()
+    qm = QuestionsManager(org_id, interview_id, uuid, respondent_exists)
+    attempt = qm.prepare_respondent()
     ready = qm.wait_for_ready(attempt)
 
     questions = qm.get_questions()
@@ -74,6 +73,26 @@ def upload_chunk():
         traceback.print_exc()  # ← log full stack trace to terminal
         return f"Upload failed: {str(e)}", 500
 
+@app.route('/api/close-interview', methods=['POST'])
+def close_interview():
+    data = request.get_json()
+    org_id = data.get('o')
+    interview_id = data.get('i')
+    uuid = data.get('uuid')
+    attempt = data.get('attempt')
+
+    if not org_id or not interview_id or not uuid or not attempt:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        manager = InterviewManager(org_id, interview_id, None, uuid)
+        manager.close_interview()
+        # process = ProcessManager() TODO
+        return jsonify({"status": "ok"})
+    
+    except Exception as e:
+        print("❌ Error setting interview complete:", e)
+        return jsonify({"error": "Failed to complete interview"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

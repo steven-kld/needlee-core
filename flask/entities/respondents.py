@@ -2,6 +2,21 @@ from atoms import run_query
 from atoms import get_bucket, create_empty_blob, list_blobs
 from google.api_core.exceptions import Forbidden, GoogleAPIError
 
+def get_progress_respondent_id(org_id, interview_id, respondent_hash):
+    """
+    Return respondent ID if status is 'init' or 'progress'; otherwise return None.
+    """
+    row = run_query(
+        """
+        SELECT id FROM respondents
+        WHERE organization_id = %s AND interview_id = %s
+        AND respondent_hash = %s AND status IN ('init', 'progress')
+        """,
+        (org_id, interview_id, respondent_hash),
+        fetch_one=True
+    )
+    return row["id"] if row else None
+
 
 def get_or_create_respondent(org_id, interview_id, contact, respondent_hash, interview_name, language):
     """
@@ -119,7 +134,7 @@ def create_respondent_attempt_folder(org_id, interview_id, respondent_uuid):
         create_empty_blob(bucket, f"{attempt_path}.ready")
 
         print(f"📁 Created attempt folder: {attempt_path}")
-        return attempt_path
+        return attempt_path, next_attempt
 
     except Forbidden:
         raise PermissionError("GCS write access forbidden")

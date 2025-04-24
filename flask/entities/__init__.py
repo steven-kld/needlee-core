@@ -8,6 +8,7 @@ from .interviews import (
 
 # respondents
 from .respondents import (
+    get_progress_respondent_id,
     get_or_create_respondent,
     update_respondent_status,
     create_respondent_folder,
@@ -30,6 +31,7 @@ __all__ = [
     "set_interview_invisible",
 
     # Respondents
+    "get_progress_respondent_id",
     "get_or_create_respondent",
     "update_respondent_status",
     "create_respondent_folder",
