@@ -12,6 +12,17 @@ def get_questions(interview_id):
         fetch_all=True
     )
 
+def get_questions_expected(interview_id):
+    return run_query(
+        """
+        SELECT question_num, question, expected FROM questions
+        WHERE interview_id = %s
+        ORDER BY question_num ASC
+        """,
+        (interview_id,),
+        fetch_all=True
+    )
+
 def get_question_audio_url(org_id, interview_id, question_num, expiration=3600):
     bucket = get_bucket(org_id)
     path = f"{interview_id}/questions/{question_num}.mp3"

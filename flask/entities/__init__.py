@@ -8,6 +8,7 @@ from .interviews import (
 
 # respondents
 from .respondents import (
+    get_closed_respondent_id,
     get_progress_respondent_id,
     get_or_create_respondent,
     update_respondent_status,
@@ -18,11 +19,18 @@ from .respondents import (
 # questions
 from .questions import (
     get_questions,
+    get_questions_expected,
     get_question_audio_url,
     get_latest_attempt_number,
     wait_for_attempt_ready,
 )
 
+from .process import (
+    download_attempt_files,
+    generate_transcription,
+    rate_answer_set,
+    build_video,
+)
 __all__ = [
     # Interviews
     "get_interview_by_id",
@@ -31,6 +39,7 @@ __all__ = [
     "set_interview_invisible",
 
     # Respondents
+    "get_closed_respondent_id",
     "get_progress_respondent_id",
     "get_or_create_respondent",
     "update_respondent_status",
@@ -39,7 +48,14 @@ __all__ = [
 
     # Questions
     "get_questions",
+    "get_questions_expected",
     "get_question_audio_url",
     "get_latest_attempt_number",
     "wait_for_attempt_ready",
+
+    # Process
+    "download_attempt_files",
+    "generate_transcription",
+    "rate_answer_set",
+    "build_video",
 ]

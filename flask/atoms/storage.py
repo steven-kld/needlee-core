@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from google.cloud import storage
 from google.oauth2 import service_account
 from datetime import timedelta
+from google.api_core.exceptions import NotFound
 
 load_dotenv()
 
@@ -24,8 +25,28 @@ def init_google_credentials():
 def get_client():
     return storage.Client(credentials=init_google_credentials(), project=os.getenv("GOOGLE_PROJECT_ID"))
 
-def get_bucket(org_id):
-    return get_client().bucket(f"o_{org_id}")
+def get_bucket(org_id, logger=None):
+    client = get_client()
+    bucket_name = f"o_{org_id}"
+
+    try:
+        bucket = client.lookup_bucket(bucket_name)
+        if bucket is None:
+            msg = f"❌ Bucket '{bucket_name}' does not exist."
+            if logger: logger.error(msg)
+            else: print(msg)
+            return None
+        return bucket
+    except NotFound:
+        msg = f"❌ Bucket '{bucket_name}' not found (NotFound exception)."
+        if logger: logger.error(msg)
+        else: print(msg)
+        return None
+    except Exception as e:
+        msg = f"❌ Unexpected error while accessing bucket '{bucket_name}': {e}"
+        if logger: logger.exception(msg)
+        else: print(msg)
+        return None
 
 def blob_exists(bucket, path):
     return bucket.blob(path).exists()
@@ -74,9 +95,22 @@ def upload_file(org_id, local_file_path, destination_path):
     bucket = get_bucket(org_id)
     upload_file_to_path(bucket, destination_path, local_file_path)
 
+def get_last_attempt(org_id, interview_id, user_id):
+    bucket = get_bucket(org_id)
+    base_prefix = f"{interview_id}/respondents/{user_id}/"
+    blobs = list_blobs(bucket, prefix=base_prefix)
 
+    attempt_nums = set()
+    for blob in blobs:
+        parts = blob.name[len(base_prefix):].split('/')
+        if parts and parts[0].startswith("attempt_"):
+            try:
+                attempt_num = int(parts[0].split("_")[1])
+                attempt_nums.add(attempt_num)
+            except ValueError:
+                continue
 
-
+    return max(attempt_nums) if attempt_nums else 0
 # import os, mimetypes
 # from dotenv import load_dotenv
 # from google.cloud import storage

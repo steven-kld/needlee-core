@@ -1,6 +1,21 @@
 from atoms import run_query
-from atoms import get_bucket, create_empty_blob, list_blobs
+from atoms import get_bucket, create_empty_blob, list_blobs, get_last_attempt
 from google.api_core.exceptions import Forbidden, GoogleAPIError
+
+def get_closed_respondent_id(org_id, interview_id, respondent_hash):
+    """
+    Return respondent ID if status is 'closed'; otherwise return None.
+    """
+    row = run_query(
+        """
+        SELECT id FROM respondents
+        WHERE organization_id = %s AND interview_id = %s
+        AND respondent_hash = %s AND status = 'closed'
+        """,
+        (org_id, interview_id, respondent_hash),
+        fetch_one=True
+    )
+    return row["id"] if row else None
 
 def get_progress_respondent_id(org_id, interview_id, respondent_hash):
     """
@@ -128,7 +143,7 @@ def create_respondent_attempt_folder(org_id, interview_id, respondent_uuid):
                 except ValueError:
                     continue
 
-        next_attempt = max(attempt_nums, default=0) + 1
+        next_attempt = get_last_attempt(org_id, interview_id, respondent_uuid) + 1
         attempt_path = f"{base_prefix}attempt_{next_attempt}/"
         create_empty_blob(bucket, attempt_path)
         create_empty_blob(bucket, f"{attempt_path}.ready")

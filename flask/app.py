@@ -1,10 +1,11 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-
+import threading
 from services.interview_manager import InterviewManager
 from services.questions_manager import QuestionsManager
 from services.answer_manager import AnswersManager
+from services.process_manager import ProcessManager
 load_dotenv()
 
 app = Flask(__name__)
@@ -93,6 +94,11 @@ def close_interview():
     except Exception as e:
         print("❌ Error setting interview complete:", e)
         return jsonify({"error": "Failed to complete interview"}), 500
+
+@app.route('/api/process/<organization_id>/<interview_id>/<user_id>')
+def api_process_interview(organization_id, interview_id, user_id):
+    # threading.Thread(target=lambda: process_interview(organization_id, interview_id, user_id), daemon=True).start()
+    return {"r": "none"}, 200
 
 if __name__ == "__main__":
     app.run(debug=True)
