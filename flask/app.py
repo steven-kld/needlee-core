@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-import threading, time
+import threading
 from services.interview_manager import InterviewManager
 from services.questions_manager import QuestionsManager
 from services.answer_manager import AnswersManager
@@ -72,7 +72,7 @@ def upload_chunk():
 
     except Exception as e:
         import traceback
-        traceback.print_exc()  # ← log full stack trace to terminal
+        traceback.print_exc() 
         return f"Upload failed: {str(e)}", 500
 
 @app.route('/api/close-interview', methods=['POST'])
@@ -103,8 +103,7 @@ def api_process_interview(organization_id, interview_id, user_id, attempt):
     process_interview(organization_id, interview_id, user_id, attempt)
     return {"r": "none"}, 200
 
-def process_interview(organization_id, interview_id, user_id, attempt):
-    time.sleep(10)
+def process_interview(organization_id, interview_id, user_id, attempt):    
     process = ProcessManager(organization_id, interview_id, user_id, attempt)
     if process.valid == False: print("Invalid")
     threading.Thread(target=lambda: process.process(), daemon=True).start()

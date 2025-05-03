@@ -1,5 +1,5 @@
 from utils.logger import LogManager
-import openai, os, shutil
+import openai, os, shutil, time
 from entities import (
     update_respondent_status,
     get_respondent,
@@ -98,6 +98,8 @@ class ProcessManager:
         if not self.valid:
             return False
         
+        time.sleep(10)
+
         self.logger.info("✅ Interview processing started")
         self.logger.start_timer()
 
