@@ -1,5 +1,6 @@
 import os, re, subprocess, json
 from collections import defaultdict
+from .respondents import update_respondent_status
 from atoms import (
     get_bucket, 
     list_blobs, 
@@ -12,6 +13,8 @@ from atoms import (
     needs_fixing,
     reencode_webm,
     sort_webm_files,
+    run_query,
+    upload_file_to_path
 )
 
 def download_attempt_files(org_id, interview_id, user_id, attempt, logger):
@@ -227,7 +230,8 @@ def extract_json_block(text):
         return match.group(0)
     raise ValueError("No JSON block found in GPT response")
 
-def build_video(user_id, total_question_count):
+def build_video(user_id, total_question_count, logger):
+    logger.info(f"Building video...")
     directory = f"temp/{user_id}"
     fixed_dir = os.path.join(directory, "fixed")
     os.makedirs(fixed_dir, exist_ok=True)
@@ -248,7 +252,7 @@ def build_video(user_id, total_question_count):
 
         fix_required = needs_fixing(src_path)
         if fix_required is None:
-            print(f"⚠️ Skipping unreadable file: {webm}")
+            logger.info(f"⚠️ Skipping unreadable file: {webm}")
             continue
         try:
             if fix_required:
@@ -256,7 +260,7 @@ def build_video(user_id, total_question_count):
             else:
                 subprocess.run(["cp", src_path, fixed_path], check=True)
         except subprocess.CalledProcessError:
-            print(f"❌ Failed to prepare {webm}, skipping.")
+            logger.exception(f"❌ Failed to prepare {webm}, skipping.")
             continue
 
         inputs.extend(["-i", fixed_path])
@@ -283,9 +287,10 @@ def build_video(user_id, total_question_count):
 
         current_time += duration
         previous_part = part_number
+        logger.log_time(f"✅ {webm} fixed")
 
     if not filters:
-        print(f"❌ No valid chunks found for user {user_id}. Skipping concat.")
+        logger.exception(f"❌ No valid chunks found for user {user_id}. Skipping concat.")
         return []
 
     # Prepare filter_complex
@@ -301,4 +306,59 @@ def build_video(user_id, total_question_count):
     ]
 
     subprocess.run(cmd, check=True)
+    logger.log_time(f"✅ Video built & timecodes ready")
     return timecodes
+
+def upload_interview(user_id, respondent_id, interview_id, org_id, data, logger):
+    try:
+        if not isinstance(data, dict):
+            logger.exception(f"❌ Review data invalid")
+            raise TypeError("review data must be a Python dict")
+
+        if insert_review(respondent_id, interview_id, json.dumps(data), logger) == None: 
+            upload_file_to_path(
+                get_bucket(org_id), 
+                f"{interview_id}/respondents/{user_id}/process.log", 
+                f"temp/{user_id}/process.log"
+            )
+            update_respondent_status(respondent_id, "error")
+            return
+        
+        upload_file_to_path(
+            get_bucket(org_id), 
+            f"{interview_id}/respondents/{user_id}/interview.webm", 
+            f"temp/{user_id}/interview.webm"
+        )
+
+        upload_file_to_path(
+            get_bucket(org_id), 
+            f"{interview_id}/respondents/{user_id}/process.log", 
+            f"temp/{user_id}/process.log"
+        )
+
+        update_respondent_status(respondent_id, "processed")
+
+    except:
+        update_respondent_status(respondent_id, "error")
+
+        upload_file_to_path(
+            get_bucket(org_id), 
+            f"{interview_id}/respondents/{user_id}/process.log", 
+            f"temp/{user_id}/process.log"
+        )
+
+def insert_review(respondent_id, interview_id, data_json, logger):
+    try:
+        return run_query(
+            """
+            INSERT INTO reviews (
+                respondent_id, interview_id, review_data
+            ) VALUES (%s, %s, %s)
+            RETURNING *
+            """,
+            (respondent_id, interview_id, data_json),
+            fetch_one=True
+        )
+    except Exception as e:
+        logger.exception(f"Failed to insert review for respondent {respondent_id}: {e}")
+        return None

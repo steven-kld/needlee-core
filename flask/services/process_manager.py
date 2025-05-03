@@ -1,7 +1,8 @@
 from utils.logger import LogManager
-import openai, os, json
+import openai, os, shutil
 from entities import (
     update_respondent_status,
+    get_respondent,
     get_interview_by_id,
     get_closed_respondent_id,
     get_questions_expected,
@@ -9,6 +10,7 @@ from entities import (
     generate_transcription,
     rate_answer_set,
     build_video,
+    upload_interview,
 )
 
 class ProcessManager:
@@ -30,9 +32,11 @@ class ProcessManager:
             self._validate_inputs()
             self.questions = get_questions_expected(self.interview_id)
             self.openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            self._init_process()
-            self.valid = True
             
+            if self._init_process() == False:
+                return
+                
+            self.valid = True
             self.logger.info("✅ ProcessManager data validation success")
 
         except Exception as e:
@@ -41,7 +45,14 @@ class ProcessManager:
     def _init_process(self):
         self.respondent_id = get_closed_respondent_id(self.organization_id, self.interview_id, self.user_id)
         if not self.respondent_id:
-            return False
+            respondent = get_respondent(self.organization_id, self.interview_id, self.user_id)
+            if respondent == None:
+                return False
+            if respondent["status"] in ["error", "process"]:
+                update_respondent_status(respondent["id"], "closed")
+                self.respondent_id = get_closed_respondent_id(self.organization_id, self.interview_id, self.user_id)
+            else:
+                return False
         
         local_dir = f"temp/{self.user_id}"
         os.makedirs(local_dir, exist_ok=True)
@@ -73,15 +84,19 @@ class ProcessManager:
             self.logger.error(f"❌ {self.language_code} is not supported ")
             return False
         
-        # Outcomment later
-        # update_respondent_status(self.respondent_id, "process")
+        update_respondent_status(self.respondent_id, "process")
         self.logger.info(f"✅ Respondent {self.user_id} status was set to process")
+
+        return True
     
     def _validate_inputs(self):
         if not all([self.organization_id, self.interview_id, self.user_id]):
             raise ValueError("Missing required process parameters.")
         
     def process(self):
+        if not self.valid:
+            return False
+        
         self.logger.info("✅ Interview processing started")
         self.logger.start_timer()
 
@@ -98,15 +113,15 @@ class ProcessManager:
         else:
             data = rate_answer_set(data, self.logger, self.language_name)
             self.logger.info(f"✅ Rating step complete")
-        data = {
-            "interview": [1, 2, 3]
-        }
-        timecodes = build_video(self.user_id, len(data["interview"]))
+        
+        timecodes = build_video(self.user_id, len(data["interview"]), self.logger)
         if timecodes != {}:
             self.logger.info(f"✅ Video processing step complete")
             data["timecodes"] = timecodes
-            out_path = f'temp/{self.user_id}/interview.json'
-            with open(out_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
 
+            upload_interview(self.user_id, 14, self.interview_id, self.organization_id, data, self.logger)
+            shutil.rmtree(f"temp/{self.user_id}")
 
+                
+            
+            

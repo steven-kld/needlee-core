@@ -8,6 +8,7 @@ from .interviews import (
 
 # respondents
 from .respondents import (
+    get_respondent,
     get_closed_respondent_id,
     get_progress_respondent_id,
     get_or_create_respondent,
@@ -30,6 +31,7 @@ from .process import (
     generate_transcription,
     rate_answer_set,
     build_video,
+    upload_interview,
 )
 __all__ = [
     # Interviews
@@ -39,6 +41,7 @@ __all__ = [
     "set_interview_invisible",
 
     # Respondents
+    "get_respondent",
     "get_closed_respondent_id",
     "get_progress_respondent_id",
     "get_or_create_respondent",
@@ -58,4 +61,5 @@ __all__ = [
     "generate_transcription",
     "rate_answer_set",
     "build_video",
+    "upload_interview",
 ]

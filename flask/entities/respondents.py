@@ -2,6 +2,18 @@ from atoms import run_query
 from atoms import get_bucket, create_empty_blob, list_blobs, get_last_attempt
 from google.api_core.exceptions import Forbidden, GoogleAPIError
 
+def get_respondent(org_id, interview_id, respondent_hash):
+    row = run_query(
+        """
+        SELECT * FROM respondents
+        WHERE organization_id = %s AND interview_id = %s
+        AND respondent_hash = %s
+        """,
+        (org_id, interview_id, respondent_hash),
+        fetch_one=True
+    )
+    return row if row else None
+
 def get_closed_respondent_id(org_id, interview_id, respondent_hash):
     """
     Return respondent ID if status is 'closed'; otherwise return None.
@@ -64,8 +76,8 @@ def get_or_create_respondent(org_id, interview_id, contact, respondent_hash, int
         """
         INSERT INTO respondents (
             interview_id, organization_id, interview_display_name,
-            contact, respondent_hash, language, status, timecodes, visible
-        ) VALUES (%s, %s, %s, %s, %s, %s, 'init', '', TRUE)
+            contact, respondent_hash, language, status
+        ) VALUES (%s, %s, %s, %s, %s, %s, 'init')
         RETURNING *
         """,
         (interview_id, org_id, interview_name, contact, respondent_hash, language),

@@ -6,6 +6,7 @@ from services.interview_manager import InterviewManager
 from services.questions_manager import QuestionsManager
 from services.answer_manager import AnswersManager
 from services.process_manager import ProcessManager
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -88,17 +89,25 @@ def close_interview():
     try:
         manager = InterviewManager(org_id, interview_id, None, uuid)
         manager.close_interview()
-        # process = ProcessManager() TODO
+
+        process_interview(org_id, interview_id, uuid, attempt)
+        
         return jsonify({"status": "ok"})
     
     except Exception as e:
         print("❌ Error setting interview complete:", e)
         return jsonify({"error": "Failed to complete interview"}), 500
 
-@app.route('/api/process/<organization_id>/<interview_id>/<user_id>')
-def api_process_interview(organization_id, interview_id, user_id):
-    # threading.Thread(target=lambda: process_interview(organization_id, interview_id, user_id), daemon=True).start()
+@app.route('/api/process/<organization_id>/<interview_id>/<user_id>/<attempt>')
+def api_process_interview(organization_id, interview_id, user_id, attempt):
+    process_interview(organization_id, interview_id, user_id, attempt)
     return {"r": "none"}, 200
+
+def process_interview(organization_id, interview_id, user_id, attempt):
+    process = ProcessManager(organization_id, interview_id, user_id, attempt)
+    if process.valid == False: print("Invalid")
+    threading.Thread(target=lambda: process.process(), daemon=True).start()
+    return
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -60,9 +60,14 @@ def upload_string(bucket, path, data, content_type="text/plain"):
 
 def upload_file_to_path(bucket, path, local_file_path):
     blob = bucket.blob(path)
-    mime_type, _ = mimetypes.guess_type(local_file_path)
-    if mime_type is None:
-        raise ValueError(f"Unsupported file type for '{local_file_path}'")
+    
+    if local_file_path.endswith(".log"):
+        mime_type = "text/plain"
+    else:
+        mime_type, _ = mimetypes.guess_type(local_file_path)
+        if mime_type is None:
+            raise ValueError(f"Unsupported file type for '{local_file_path}'")
+        
     blob.content_type = mime_type
     blob.upload_from_filename(local_file_path)
 

@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from psycopg2.errors import UniqueViolation, ForeignKeyViolation
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,21 +27,28 @@ def run_query(query, params=None, fetch_one=False, fetch_all=False):
     - fetch_one: return one result (dict)
     - fetch_all: return all results (list of dicts)
     """
-    with get_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(query, params or ())
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query, params or ())
 
-            if fetch_one:
-                row = cur.fetchone()
-                if not row:
-                    return None
-                cols = [desc[0] for desc in cur.description]
-                return dict(zip(cols, row))
+                if fetch_one:
+                    row = cur.fetchone()
+                    if not row:
+                        return None
+                    cols = [desc[0] for desc in cur.description]
+                    return dict(zip(cols, row))
 
-            if fetch_all:
-                rows = cur.fetchall()
-                cols = [desc[0] for desc in cur.description]
-                return [dict(zip(cols, r)) for r in rows]
+                if fetch_all:
+                    rows = cur.fetchall()
+                    cols = [desc[0] for desc in cur.description]
+                    return [dict(zip(cols, r)) for r in rows]
 
-            conn.commit()
-            return None
+                conn.commit()
+                return None
+    except UniqueViolation:
+        raise ValueError(f"Already exists")
+    except ForeignKeyViolation:
+        raise ValueError(f"Invalid foreign key")
+    except Exception as e:
+        raise RuntimeError(f"Failed to insert review: {str(e)}")
