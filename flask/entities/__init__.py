@@ -13,6 +13,7 @@ from .respondents import (
     get_progress_respondent_id,
     get_or_create_respondent,
     update_respondent_status,
+    set_respondent_score,
     create_respondent_folder,
     create_respondent_attempt_folder,
 )
@@ -46,6 +47,7 @@ __all__ = [
     "get_progress_respondent_id",
     "get_or_create_respondent",
     "update_respondent_status",
+    "set_respondent_score",
     "create_respondent_folder",
     "create_respondent_attempt_folder",
 

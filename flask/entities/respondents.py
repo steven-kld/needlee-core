@@ -105,6 +105,23 @@ def update_respondent_status(respondent_id, new_status):
         (new_status, respondent_id)
     )
 
+def set_respondent_score(respondent_id, score):
+    """
+    Update the respondent's score
+
+    Args:
+        respondent_id (int): Respondent row ID.
+        score (float): Score to assign.
+
+    Returns:
+        None
+    """
+    run_query(
+        """
+        UPDATE respondents SET score = %s WHERE id = %s
+        """,
+        (score, respondent_id)
+    )
 
 def create_respondent_folder(org_id, interview_id, respondent_uuid):
     """

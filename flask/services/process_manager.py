@@ -10,6 +10,7 @@ from entities import (
     generate_transcription,
     rate_answer_set,
     build_video,
+    set_respondent_score,
     upload_interview,
 )
 
@@ -118,8 +119,8 @@ class ProcessManager:
         if timecodes != {}:
             self.logger.info(f"✅ Video processing step complete")
             data["timecodes"] = timecodes
-
-            upload_interview(self.user_id, 14, self.interview_id, self.organization_id, data, self.logger)
+            set_respondent_score(self.respondent_id, data["summary"]["rate"])
+            upload_interview(self.user_id, self.respondent_id, self.interview_id, self.organization_id, data, self.logger)
             shutil.rmtree(f"temp/{self.user_id}")
 
                 
