@@ -1,5 +1,6 @@
-import os, openai, whisper
+import os, openai
 from dotenv import load_dotenv
+from faster_whisper import WhisperModel
 
 load_dotenv()
 
@@ -7,22 +8,27 @@ def init_openai():
     return openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def init_whisper():
-    return whisper.load_model("medium")
+    return WhisperModel(
+        "medium",
+        compute_type="int8",
+        download_root="/models/models--Systran--faster-whisper-medium"
+    )
 
 def init_eleven_labs():
     return True
 
-def transcribe(path, whisper_model, language):
+def transcribe(path, whisper_model, language=None):
     try:
-        result = whisper_model.transcribe(path, language=language)
-        text = result["text"].strip()
-        segments = result.get("segments", [])
-        avg_prob = sum(s.get("no_speech_prob", 0) for s in segments) / max(len(segments), 1)
+        segments, info = whisper_model.transcribe(path, language=language)
+        segments = list(segments)
+
+        text = "".join([s.text for s in segments]).strip()
+        avg_prob = sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
         return text, avg_prob
     except Exception as e:
         print(f"❌ Transcription failed for {path}: {e}")
         return None, 1.0
-
+    
 def respond_with_ai(prompt, openai_client, max_tokens=500):
     response = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -40,3 +46,4 @@ def respond_with_ai(prompt, openai_client, max_tokens=500):
         presence_penalty=0
     )
     return response.choices[0].message.content
+

@@ -29,6 +29,7 @@ from .video import (
     reencode_webm,
     sort_webm_files,
     sorting_key,
+    convert_webm_to_wav,
 )
 
 __all__ = [
@@ -53,4 +54,5 @@ __all__ = [
     "reencode_webm",
     "sort_webm_files",
     "sorting_key",
+    "convert_webm_to_wav",
 ]

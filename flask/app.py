@@ -109,5 +109,6 @@ def process_interview(organization_id, interview_id, user_id, attempt):
     threading.Thread(target=lambda: process.process(), daemon=True).start()
     return
 
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=9091, debug=True)
+

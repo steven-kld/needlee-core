@@ -1,4 +1,7 @@
 flask
+flask-cors
+hf_xet
+python-dotenv
 requests
 bcrypt
 protobuf==3.20.*
@@ -10,7 +13,5 @@ google-auth-httplib2
 google-auth-oauthlib
 psycopg2-binary
 openai
-git+https://github.com/openai/whisper.git
-torch
-torchaudio
 ffmpeg-python
+faster-whisper

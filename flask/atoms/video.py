@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import os, subprocess, re, json
+import os, subprocess, re, json, ffmpeg
 
 def get_real_duration(path):
     try:
@@ -108,3 +108,17 @@ def sorting_key(filename):
         first, second = map(int, match.groups())
         return (first, second)
     return (float('inf'), float('inf'))
+
+def convert_webm_to_wav(input_path, output_path=None):
+    if not output_path:
+        output_path = input_path.replace(".webm", ".wav")
+    
+    try:
+        subprocess.run([
+            "ffmpeg", "-y", "-i", input_path,
+            "-ac", "1", "-ar", "16000",  # mono, 16kHz
+            "-f", "wav", output_path
+        ], check=True)
+        return output_path
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"FFmpeg conversion failed: {e}")

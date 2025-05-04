@@ -5,7 +5,8 @@ from atoms import (
     get_bucket, 
     list_blobs, 
     get_last_attempt, 
-    init_whisper, 
+    init_whisper,
+    convert_webm_to_wav, 
     transcribe, 
     init_openai, 
     respond_with_ai, 
@@ -78,8 +79,10 @@ def generate_transcription(user_id, questions, logger, language_code):
         transcription = ""
         for chunk_idx in chunks:
             file = f"temp/{user_id}/{question_num}_{chunk_idx}.webm"
+            wav_file = f"temp/{user_id}/{question_num}_{chunk_idx}.wav"
             try:
-                text, prob = transcribe(file, whisper, language_code)
+                convert_webm_to_wav(file, wav_file)
+                text, prob = transcribe(wav_file, whisper, language_code)
                 if text is None:
                     logger.exception(f"⚠️ Skipped corrupt or unreadable chunk: {file}")
                     continue

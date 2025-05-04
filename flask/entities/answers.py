@@ -1,7 +1,6 @@
 from atoms import get_bucket, upload_file_to_path
 import tempfile
 import os
-import mimetypes
 
 def save_chunk(org_id, interview_id, uuid, attempt, question_num, chunk_index, file_storage):
     bucket = get_bucket(org_id)

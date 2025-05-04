@@ -1,17 +1,16 @@
 services:
   web:
     image: nginx
-    volumes:
-      - ./nginx/nginx.conf:/tmp/nginx.conf
-    environment: 
-      - FLASK_SERVER_ADDR=backend:9091  
-    command: /bin/bash -c "envsubst < /tmp/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'" 
     ports:
       - 80:80
+    volumes:
+      - ./nginx/nginx.conf:/tmp/nginx.conf
+    environment:
+      - FLASK_SERVER_ADDR=backend:9091
+    command: >
+      /bin/sh -c "envsubst '\$${FLASK_SERVER_ADDR}' < /tmp/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
     depends_on:
       - backend
-    networks:
-      - internal_network
 
   backend:
     build:
@@ -23,10 +22,10 @@ services:
     env_file:
       - .env
     volumes:
+      - /opt/whisper-models/medium:/models
       - ./flask:/src
-    networks:
-      - internal_network
+    ports:
+      - "9091:9091"
 
-networks:
-  internal_network:
-    driver: bridge
+
+
