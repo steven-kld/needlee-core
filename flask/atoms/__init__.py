@@ -18,7 +18,7 @@ from .ai import (
     init_openai,
     init_whisper,
     init_eleven_labs,
-    transcribe,
+    silence_prob,
     respond_with_ai,
 )
 
@@ -46,7 +46,7 @@ __all__ = [
     "init_openai",
     "init_whisper",
     "init_eleven_labs",
-    "transcribe",
+    "silence_prob",
     "respond_with_ai",
     "get_real_duration",
     "has_frames",

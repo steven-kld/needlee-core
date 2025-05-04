@@ -7,7 +7,7 @@ from atoms import (
     get_last_attempt, 
     init_whisper,
     convert_webm_to_wav, 
-    transcribe, 
+    silence_prob, 
     init_openai, 
     respond_with_ai, 
     get_real_duration,
@@ -58,6 +58,15 @@ def download_attempt_files(org_id, interview_id, user_id, attempt, logger):
 
 def generate_transcription(user_id, questions, logger, language_code):
     whisper = None
+    openai_client = None
+
+    try:
+        openai_client = init_openai()
+        logger.log_time(f"✅ OpenAI client is ready")
+    except Exception as e:
+        logger.exception(f"❌ Failed to initialize OpenAI: {e}")
+        return None
+    
     try:
         whisper = init_whisper()
         logger.log_time(f"✅ Whisper is ready")
@@ -82,7 +91,20 @@ def generate_transcription(user_id, questions, logger, language_code):
             wav_file = f"temp/{user_id}/{question_num}_{chunk_idx}.wav"
             try:
                 convert_webm_to_wav(file, wav_file)
-                text, prob = transcribe(wav_file, whisper, language_code)
+
+                if silence_prob(wav_file, whisper, language_code) > 0.45:
+                    logger.exception(f"⚠️ Skipped silent or unclear chunk: {file}")
+                    continue
+                
+                with open(wav_file, "rb") as buffer:
+                    response = openai_client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=buffer,
+                        response_format="verbose_json"
+                    )
+
+                text = response.text
+
                 if text is None:
                     logger.exception(f"⚠️ Skipped corrupt or unreadable chunk: {file}")
                     continue

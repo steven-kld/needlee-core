@@ -9,10 +9,21 @@
 # process = ProcessManager(organization_id, interview_id, user_id, attempt)
 # process.process()
 
-import sys
+import sys, openai
 import os
 import subprocess
+
+from dotenv import load_dotenv
 from faster_whisper import WhisperModel
+
+load_dotenv()
+
+def init_whisper():
+    return WhisperModel(
+        "tiny",
+        compute_type="int8",
+        download_root="/models/models--Systran--faster-whisper-tiny"
+    )
 
 def convert_webm_to_wav(input_path, output_path=None):
     if not output_path:
@@ -28,17 +39,14 @@ def convert_webm_to_wav(input_path, output_path=None):
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"FFmpeg conversion failed: {e}")
     
-def transcribe(path, whisper_model, language=None):
+def silence_prob(path, whisper_model, language=None):
     try:
         segments, info = whisper_model.transcribe(path, language=language)
         segments = list(segments)
-
-        text = "".join([s.text for s in segments]).strip()
-        avg_prob = sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
-        return text, avg_prob
+        return sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
     except Exception as e:
         print(f"❌ Transcription failed for {path}: {e}")
-        return None, 1.0
+        return 1.0
 
 def main():
     if len(sys.argv) < 2:
@@ -55,11 +63,21 @@ def main():
     print(f"✅ Converted to: {wav_file}")
 
     print("🎧 Loading model...")
-    model = WhisperModel("medium", compute_type="int8", download_root="/models")
+    model = init_whisper()
 
     print("🧠 Transcribing...")
-    seg, i = transcribe(wav_file, model, language="ru")
-    print(seg, i)
+    if silence_prob(wav_file, model, "ru") > 0.45:
+        return
+    openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    with open(wav_file, "rb") as buffer:
+        response = openai_client.audio.transcriptions.create(
+            model="whisper-1",
+            file=buffer,
+            response_format="verbose_json"
+        )
+
+    print(response.text)
+    
     
 
 if __name__ == "__main__":

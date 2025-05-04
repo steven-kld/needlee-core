@@ -9,25 +9,22 @@ def init_openai():
 
 def init_whisper():
     return WhisperModel(
-        "medium",
+        "tiny",
         compute_type="int8",
-        download_root="/models/models--Systran--faster-whisper-medium"
+        download_root="/models/models--Systran--faster-whisper-tiny"
     )
 
 def init_eleven_labs():
     return True
 
-def transcribe(path, whisper_model, language=None):
+def silence_prob(path, whisper_model, language=None):
     try:
         segments, info = whisper_model.transcribe(path, language=language)
         segments = list(segments)
-
-        text = "".join([s.text for s in segments]).strip()
-        avg_prob = sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
-        return text, avg_prob
+        return sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
     except Exception as e:
         print(f"❌ Transcription failed for {path}: {e}")
-        return None, 1.0
+        return 1.0
     
 def respond_with_ai(prompt, openai_client, max_tokens=500):
     response = openai_client.chat.completions.create(

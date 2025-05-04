@@ -62,7 +62,7 @@ def upload_file_to_path(bucket, path, local_file_path):
     blob = bucket.blob(path)
     
     if local_file_path.endswith(".log"):
-        mime_type = "text/plain"
+        mime_type = "text/plain; charset=utf-8"
     else:
         mime_type, _ = mimetypes.guess_type(local_file_path)
         if mime_type is None:

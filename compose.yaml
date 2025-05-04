@@ -22,7 +22,7 @@ services:
     env_file:
       - .env
     volumes:
-      - /opt/whisper-models/medium:/models
+      - /opt/whisper-models/tiny:/models
       - ./flask:/src
     ports:
       - "9091:9091"
