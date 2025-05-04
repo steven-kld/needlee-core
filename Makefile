@@ -1,4 +1,4 @@
-WHISPER_MODEL_PATH=/opt/whisper-models/medium
+WHISPER_MODEL_PATH ?= $(HOME)/.cache/whisper
 
 .PHONY: download-whisper clean prod
 
