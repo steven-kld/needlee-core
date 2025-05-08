@@ -51,4 +51,4 @@ def run_query(query, params=None, fetch_one=False, fetch_all=False):
     except ForeignKeyViolation:
         raise ValueError(f"Invalid foreign key")
     except Exception as e:
-        raise RuntimeError(f"Failed to insert review: {str(e)}")
+        raise RuntimeError(f"Failed to insert: {str(e)}")

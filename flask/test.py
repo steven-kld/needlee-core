@@ -9,76 +9,37 @@
 # process = ProcessManager(organization_id, interview_id, user_id, attempt)
 # process.process()
 
-import sys, openai
-import os
-import subprocess
+# import os
 
-from dotenv import load_dotenv
-from faster_whisper import WhisperModel
+# email = "demo@needlee.ai"
+# password = "test"
 
-load_dotenv()
+# from dotenv import load_dotenv
+# from entities.organizations import (
+#     check_creds,
+#     set_password
+# )
 
-def init_whisper():
-    return WhisperModel(
-        "tiny",
-        compute_type="int8",
-        download_root="/models/models--Systran--faster-whisper-tiny"
-    )
 
-def convert_webm_to_wav(input_path, output_path=None):
-    if not output_path:
-        output_path = input_path.replace(".webm", ".wav")
-    
-    try:
-        subprocess.run([
-            "ffmpeg", "-y", "-i", input_path,
-            "-ac", "1", "-ar", "16000",  # mono, 16kHz
-            "-f", "wav", output_path
-        ], check=True)
-        return output_path
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(f"FFmpeg conversion failed: {e}")
-    
-def silence_prob(path, whisper_model, language=None):
-    try:
-        segments, info = whisper_model.transcribe(path, language=language)
-        segments = list(segments)
-        return sum(s.no_speech_prob for s in segments) / max(len(segments), 1)
-    except Exception as e:
-        print(f"❌ Transcription failed for {path}: {e}")
-        return 1.0
+# load_dotenv()
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python3 test.py path/to/file.webm")
-        sys.exit(1)
 
-    input_path = sys.argv[1]
-    if not os.path.isfile(input_path):
-        print(f"File not found: {input_path}")
-        sys.exit(1)
+# if __name__ == "__main__":
+#     print(check_creds(email, password))
+    # print(get_interview_by_id(1,1))
+    # set_password(password, email)
 
-    print(f"🔁 Converting: {input_path}")
-    wav_file = convert_webm_to_wav(input_path)
-    print(f"✅ Converted to: {wav_file}")
+from services.interview_generator import InterviewGenerator
 
-    print("🎧 Loading model...")
-    model = init_whisper()
+text = """
+The attack on Pearl Harbor[nb 3] was a surprise military strike by the Empire of Japan on the United States Pacific Fleet at its naval base at Pearl Harbor on Oahu, Hawaii, on December 7, 1941. At the time, the U.S. was a neutral country in World War II. The air raid on Pearl Harbor, which was launched from aircraft carriers, resulted in the U.S. entering the war on the side of the Allies on the day following the attack. The Japanese military leadership referred to the attack as the Hawaii Operation and Operation AI,[nb 4] and as Operation Z during its planning.[14][15][16]
 
-    print("🧠 Transcribing...")
-    if silence_prob(wav_file, model, "ru") > 0.45:
-        return
-    openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    with open(wav_file, "rb") as buffer:
-        response = openai_client.audio.transcriptions.create(
-            model="whisper-1",
-            file=buffer,
-            response_format="verbose_json"
-        )
+The attack on Pearl Harbor was preceded by months of negotiations between the U.S. and Japan over the future of the Pacific. Japanese demands included that the U.S. end its sanctions against Japan, cease aiding China in the Second Sino-Japanese War, and allow Japan to access the resources of the Dutch East Indies. Japan sent out its naval attack group on November 26, 1941, just prior to receiving the Hull note, which stated the U.S. desire that Japan withdraw from China and French Indochina. Isoroku Yamamoto, commander of the Japanese Combined Fleet, planned the attack as a pre-emptive strike on the Pacific Fleet, based at Pearl Harbor since 1940 in order to prevent it from interfering with Japan's planned actions in Southeast Asia. Yamamoto hoped that the strike would enable Japan to make quick territorial gains and negotiate a peace. In addition to Pearl Harbor, over seven hours Japan launched coordinated attacks on the U.S.-held Philippines, Guam, and Wake Island; and on the British Empire in Malaya, Singapore, and Hong Kong.[17]
 
-    print(response.text)
-    
-    
+The attack force, commanded by Chūichi Nagumo, began its attacks at 7:48 a.m. Hawaiian time (6:18 p.m. GMT) on December 7, 1941.[nb 5] The base was attacked by 353 fighters, level and dive bombers, and torpedo bombers in two waves launched from six aircraft carriers.[18] Of the eight U.S. battleships present, all were damaged and four were sunk. All but Arizona were later raised, and six were returned to service during the war. The Japanese also sank or damaged three cruisers, three destroyers, an anti-aircraft training ship,[nb 6] and a minelayer. More than 180 U.S. aircraft were destroyed.[20] A total of 2,403 Americans were killed and 1,178 others were wounded, while the Japanese lost a total of 29 aircraft, five midget submarines, and 130 men. The three U.S. carriers stationed at Pearl Harbor were at sea at the time, and important base installations, including its oil storage and naval repair facilities, were not attacked. 
+"""
 
-if __name__ == "__main__":
-    main()
+gen = InterviewGenerator(1)
+gen.from_raw_text(text)
+print(gen.to_dict())
+# print

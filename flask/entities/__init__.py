@@ -1,5 +1,6 @@
 # interviews
 from .interviews import (
+    get_interviews_for_org,
     get_interview_by_id,
     get_interview_questions,
     create_interview_with_questions,
@@ -34,8 +35,19 @@ from .process import (
     build_video,
     upload_interview,
 )
+
+from .organizations import (
+    check_creds,
+    set_password,
+)
+
+from .gen_interview import (
+    generate_interview_from_text,
+)
+
 __all__ = [
     # Interviews
+    "get_interviews_for_org",
     "get_interview_by_id",
     "get_interview_questions",
     "create_interview_with_questions",
@@ -64,4 +76,11 @@ __all__ = [
     "rate_answer_set",
     "build_video",
     "upload_interview",
+
+    # Organizations
+    "check_creds",
+    "set_password",
+
+    # Gen Interview
+    "generate_interview_from_text",
 ]

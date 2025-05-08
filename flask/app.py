@@ -1,16 +1,129 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from dotenv import load_dotenv
-import threading
+import threading, uuid, os, traceback
 from services.interview_manager import InterviewManager
 from services.questions_manager import QuestionsManager
 from services.answer_manager import AnswersManager
 from services.process_manager import ProcessManager
+from services.organizations_manager import OrganizationManager
+from services.interview_generator import InterviewGenerator
 
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.getenv("APP_SECRET_KEY")
+
+CORS(app,
+    supports_credentials=True,
+    origins=[
+       "http://localhost:3000", 
+       "http://127.0.0.1:3000", 
+       "http://localhost", 
+       "http://127.0.0.1"
+    ],
+    allow_headers=["Content-Type"],
+    methods=["GET", "POST", "OPTIONS"])
+
+@app.route("/api/me", methods=["GET"])
+def me():
+    try:
+        org = OrganizationManager.from_session(session)
+        return jsonify({
+            "user": {
+                "id": session['user_id'],
+                "org_id": org.org_id,
+                "email": org.email,
+                "display_name": org.display_name,
+                "interviews": org.interviews
+            }
+        })
+    except ValueError:
+        return jsonify({"user": None}), 200  # frontend decides what to show
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    try:
+        org = OrganizationManager.from_login(email, password)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 401
+
+    session.clear()
+    session['user_id'] = str(uuid.uuid4())
+    session['email'] = org.email
+    session['org_id'] = org.org_id
+    session['display_name'] = org.display_name
+
+    return jsonify({
+        "user": {
+            "id": session['user_id'],
+            "org_id": org.org_id,
+            "email": org.email,
+            "display_name": org.display_name,
+            "interviews": org.interviews
+        }
+    })
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    if 'user_id' not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    session.clear()
+    return jsonify({"message": "Logged out successfully"})
+
+@app.route("/api/gen-interview", methods=["POST"])
+def gen_interview():
+    data = request.get_json()
+    raw_text = data.get("text")
+    if not raw_text:
+        return jsonify({"error": "No raw text provided"}), 400
+
+    # Require login
+    if "org_id" not in session:
+        return jsonify({"error": "Not authenticated"}), 403
+
+    org_id = session["org_id"]
+
+    # Generate interview structure
+    try:
+        generator = InterviewGenerator(org_id=org_id)
+        generator.from_raw_text(raw_text)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "Interview generation failed", "detail": str(e)}), 500
+
+
+    # TODO: append to session or temp state if needed
+    # For now, return generated object
+    return jsonify({
+        "status": "ok",
+        "interview": generator.to_dict()
+    })
+
+@app.route("/api/build-interview", methods=["POST"])
+def build_interview():
+    if "org_id" not in session:
+        return jsonify({"error": "Not authenticated"}), 403
+
+    try:
+        data = request.get_json().get("data")
+        print("📥 Received interview data:", data)
+
+        # TODO: process/save data later
+        return jsonify({
+            "status": "ok",
+            "interview": data  # echo back for now
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "Build failed", "detail": str(e)}), 500
+
 
 @app.route("/api/interview-session", methods=["POST"])
 def interview_session():

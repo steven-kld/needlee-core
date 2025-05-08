@@ -1,5 +1,32 @@
 from atoms import run_query
 
+def get_interviews_for_org(org_id):
+    sql = """
+        SELECT i.id AS interview_id,
+               i.display_name AS title,
+               i.description_text,
+               COUNT(r.*) AS total_respondents,
+               COUNT(CASE WHEN r.status IN ('processed') THEN 1 END) AS completed
+        FROM interviews i
+        LEFT JOIN respondents r ON i.id = r.interview_id
+        WHERE i.organization_id = %s AND i.visible = TRUE
+        GROUP BY i.id, i.description_text
+        ORDER BY i.id ASC
+    """
+    rows = run_query(sql, (org_id,), fetch_all=True)
+    return [
+        {
+            "interview_id": row["interview_id"],
+            "title": row["title"],
+            "description": row["description_text"] or "[No description]",
+            "inited": row["total_respondents"],
+            "completed": row["completed"]
+        }
+        for row in rows
+    ]
+
+
+
 def get_interview_by_id(org_id, interview_id):
     """
     Fetch a single visible interview for a given organization by ID.
