@@ -17,6 +17,9 @@ app.secret_key = os.getenv("APP_SECRET_KEY")
 CORS(app,
     supports_credentials=True,
     origins=[
+        "https://caretaker.needleetools.com",
+        "https://echo.needleetools.com",
+        "https://hub.needleetools.com",
         "https://caretaker.needlee.ai",
         "https://echo.needlee.ai",
         "https://hub.needlee.ai",
