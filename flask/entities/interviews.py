@@ -25,8 +25,6 @@ def get_interviews_for_org(org_id):
         for row in rows
     ]
 
-
-
 def get_interview_by_id(org_id, interview_id):
     """
     Fetch a single visible interview for a given organization by ID.
@@ -42,7 +40,6 @@ def get_interview_by_id(org_id, interview_id):
         (interview_id, org_id),
         fetch_one=True
     )
-
 
 def get_interview_questions(interview_id):
     """
@@ -60,7 +57,6 @@ def get_interview_questions(interview_id):
         (interview_id,),
         fetch_all=True
     )
-
 
 def create_interview_with_questions(
     org_id,
@@ -125,7 +121,6 @@ def create_interview_with_questions(
         )
 
     return interview_id
-
 
 def set_interview_invisible(org_id, interview_id):
     """

@@ -116,6 +116,21 @@ def get_last_attempt(org_id, interview_id, user_id):
                 continue
 
     return max(attempt_nums) if attempt_nums else 0
+
+def upload_blob_from_bytes(bucket, path, data_bytes, content_type="application/octet-stream"):
+    """
+    Upload a binary blob (e.g., mp3) to GCS at the specified path.
+    
+    Args:
+        bucket: GCS bucket object
+        path (str): Full path in the bucket
+        data_bytes (bytes): Raw binary data to upload
+        content_type (str): MIME type (e.g., "audio/mpeg")
+    """
+    blob = bucket.blob(path)
+    blob.upload_from_string(data_bytes, content_type=content_type)
+
+    
 # import os, mimetypes
 # from dotenv import load_dotenv
 # from google.cloud import storage

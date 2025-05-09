@@ -43,6 +43,9 @@ from .organizations import (
 
 from .gen_interview import (
     generate_interview_from_text,
+    record_interview_questions,
+    prepare_interview_folder,
+    upload_interview_audio,
 )
 
 __all__ = [
@@ -83,4 +86,7 @@ __all__ = [
 
     # Gen Interview
     "generate_interview_from_text",
+    "record_interview_questions",
+    "prepare_interview_folder",
+    "upload_interview_audio"
 ]

@@ -111,9 +111,21 @@ def build_interview():
 
     try:
         data = request.get_json().get("data")
-        print("📥 Received interview data:", data)
+        print(data)
 
-        # TODO: process/save data later
+        generator = InterviewGenerator(org_id=session["org_id"])
+        generator.apply_result(data)
+
+        def async_process():
+            try:
+                generator.insert_interview_to_db()
+                generator.build()
+                print(f"✅ Interview #{generator.interview_id} built successfully")
+            except Exception as e:
+                print(f"❌ Interview build failed: {e}")
+
+        threading.Thread(target=async_process).start()
+
         return jsonify({
             "status": "ok",
             "interview": data  # echo back for now

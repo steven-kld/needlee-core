@@ -12,12 +12,13 @@ from .storage import (
     load_file_as_string,
     list_blobs,
     get_last_attempt,
+    upload_blob_from_bytes,
 )
 
 from .ai import (
     init_openai,
     init_whisper,
-    init_eleven_labs,
+    synthesize_voice,
     silence_prob,
     respond_with_ai,
 )
@@ -43,9 +44,10 @@ __all__ = [
     "load_file_as_string",
     "list_blobs",
     "get_last_attempt",
+    "upload_blob_from_bytes",
     "init_openai",
     "init_whisper",
-    "init_eleven_labs",
+    "synthesize_voice",
     "silence_prob",
     "respond_with_ai",
     "get_real_duration",
