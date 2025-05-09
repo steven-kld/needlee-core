@@ -17,10 +17,13 @@ app.secret_key = os.getenv("APP_SECRET_KEY")
 CORS(app,
     supports_credentials=True,
     origins=[
-       "http://localhost:3000", 
-       "http://127.0.0.1:3000", 
-       "http://localhost", 
-       "http://127.0.0.1"
+        "https://caretaker.needlee.ai",
+        "https://echo.needlee.ai",
+        "https://hub.needlee.ai",
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000", 
+        "http://localhost", 
+        "http://127.0.0.1"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
