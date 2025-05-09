@@ -70,7 +70,7 @@ class InterviewManager:
             "respondent_exists": self.respondent_exists,
             "complete": self.respondent["status"] not in ["init", "progress"],
             "displayName": self.interview["display_name"],
-            "description": self.interview["description"],
+            "description_text": self.interview["description_text"],
             "thankYouMessage": self.interview["thank_you_text"],
             "thankYouUrl": self.interview["thank_you_url"],
             "video": self.interview["video_required"],
