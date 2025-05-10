@@ -6,6 +6,7 @@ from entities import (
 
 class RespondentViewer:
     def __init__(self, org_id, respondent_id):
+        self.data_required = False
         self.exists = False
         self.respondent_id = respondent_id
         self.respondent = get_respondent_by_id(org_id, respondent_id)
