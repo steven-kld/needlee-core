@@ -3,6 +3,17 @@ from atoms import run_query
 from atoms import get_bucket, create_empty_blob, list_blobs, get_last_attempt
 from google.api_core.exceptions import Forbidden, GoogleAPIError
 
+def get_respondent_review(respondent_id):
+    review = run_query(
+        """
+        SELECT * FROM reviews
+        WHERE respondent_id = %s
+        """,
+        (respondent_id,),
+        fetch_one=True
+    )
+    return review if review else None
+
 def get_respondents_reviews(interview_id):
     # Step 1: Fetch all valid respondents for that interview (processed only)
     respondent_rows = run_query(

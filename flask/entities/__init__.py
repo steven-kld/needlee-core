@@ -10,6 +10,7 @@ from .interviews import (
 
 # respondents
 from .respondents import (
+    get_respondent_review,
     get_respondents_reviews,
     get_respondent,
     get_respondent_by_id,
@@ -61,6 +62,7 @@ __all__ = [
     "get_interview_recording_url",
 
     # Respondents
+    "get_respondent_review",
     "get_respondents_reviews",
     "get_respondent",
     "get_respondent_by_id",

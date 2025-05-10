@@ -97,10 +97,17 @@ def get_interview_details(interview_id):
 def get_respondent_details(respondent_id):
     org_id = session.get("org_id")
     viewer = RespondentViewer(org_id, respondent_id)
-    if viewer.exists:
-        return jsonify({"recording_url": viewer.url}), 200
-    else:
+
+    if not viewer.exists:
         return jsonify({"error": "respondent does not exist"}), 400
+    
+    data_required = request.args.get("data_required", "false").lower() == "true"
+
+    if data_required:
+        viewer.get_required_respondent_data()
+
+    return jsonify(viewer.to_dict()), 200
+    
     
 @app.route("/api/gen-interview", methods=["POST"])
 def gen_interview():
