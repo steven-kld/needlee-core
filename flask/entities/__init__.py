@@ -9,6 +9,7 @@ from .interviews import (
 
 # respondents
 from .respondents import (
+    get_respondents_reviews,
     get_respondent,
     get_closed_respondent_id,
     get_progress_respondent_id,
@@ -57,6 +58,7 @@ __all__ = [
     "set_interview_invisible",
 
     # Respondents
+    "get_respondents_reviews",
     "get_respondent",
     "get_closed_respondent_id",
     "get_progress_respondent_id",

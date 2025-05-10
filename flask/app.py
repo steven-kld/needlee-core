@@ -8,6 +8,7 @@ from services.answer_manager import AnswersManager
 from services.process_manager import ProcessManager
 from services.organizations_manager import OrganizationManager
 from services.interview_generator import InterviewGenerator
+from services.interview_viewer import InterviewViewer
 
 load_dotenv()
 
@@ -81,6 +82,16 @@ def logout():
     session.clear()
     return jsonify({"message": "Logged out successfully"})
 
+@app.route("/api/interview-details/<int:interview_id>", methods=["GET"])
+def get_interview_details(interview_id):
+    org_id = session.get("org_id")
+    viewer = InterviewViewer(org_id, interview_id)
+    if viewer.exists:
+        return jsonify(viewer.to_dict())
+    else:
+        message, status = viewer.err
+        return jsonify({"error": message}), status
+
 @app.route("/api/gen-interview", methods=["POST"])
 def gen_interview():
     data = request.get_json()
@@ -88,13 +99,10 @@ def gen_interview():
     if not raw_text:
         return jsonify({"error": "No raw text provided"}), 400
 
-    # Require login
     if "org_id" not in session:
         return jsonify({"error": "Not authenticated"}), 403
-
     org_id = session["org_id"]
 
-    # Generate interview structure
     try:
         generator = InterviewGenerator(org_id=org_id)
         generator.from_raw_text(raw_text)
@@ -102,9 +110,6 @@ def gen_interview():
         traceback.print_exc()
         return jsonify({"error": "Interview generation failed", "detail": str(e)}), 500
 
-
-    # TODO: append to session or temp state if needed
-    # For now, return generated object
     return jsonify({
         "status": "ok",
         "interview": generator.to_dict()

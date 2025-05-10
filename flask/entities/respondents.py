@@ -1,6 +1,59 @@
+import json
 from atoms import run_query
 from atoms import get_bucket, create_empty_blob, list_blobs, get_last_attempt
 from google.api_core.exceptions import Forbidden, GoogleAPIError
+
+def get_respondents_reviews(interview_id):
+    # Step 1: Fetch all valid respondents for that interview (processed only)
+    respondent_rows = run_query(
+        """
+        SELECT id, contact
+        FROM respondents
+        WHERE interview_id = %s AND status = 'processed'
+        """,
+        (interview_id,),
+        fetch_all=True
+    )
+
+    if not respondent_rows:
+        return []
+
+    # Build lookup map { respondent_id: contact }
+    contact_map = {r["id"]: r["contact"] for r in respondent_rows}
+
+    # Step 2: Fetch all reviews
+    review_rows = run_query(
+        """
+        SELECT respondent_id, created_at, review_data
+        FROM reviews
+        WHERE interview_id = %s
+        """,
+        (interview_id,),
+        fetch_all=True
+    )
+
+    if not review_rows:
+        return []
+
+    result = []
+    for row in review_rows:
+        rid = row["respondent_id"]
+        if rid not in contact_map:
+            continue  # skip non-processed
+
+        try:
+            result.append({
+                "id": rid,
+                "contact": contact_map[rid],
+                "date": row["created_at"].strftime("%Y-%m-%d"),
+                "rate": row["review_data"]["summary"]["rate"],
+                "review": row["review_data"]["summary"]["review"]
+            })
+        except Exception as e:
+            print(f"⚠️ Failed to parse review for respondent {rid}: {e}")
+            continue
+
+    return result
 
 def get_respondent(org_id, interview_id, respondent_hash):
     row = run_query(
