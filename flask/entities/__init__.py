@@ -5,12 +5,14 @@ from .interviews import (
     get_interview_questions,
     create_interview_with_questions,
     set_interview_invisible,
+    get_interview_recording_url,
 )
 
 # respondents
 from .respondents import (
     get_respondents_reviews,
     get_respondent,
+    get_respondent_by_id,
     get_closed_respondent_id,
     get_progress_respondent_id,
     get_or_create_respondent,
@@ -56,10 +58,12 @@ __all__ = [
     "get_interview_questions",
     "create_interview_with_questions",
     "set_interview_invisible",
+    "get_interview_recording_url",
 
     # Respondents
     "get_respondents_reviews",
     "get_respondent",
+    "get_respondent_by_id",
     "get_closed_respondent_id",
     "get_progress_respondent_id",
     "get_or_create_respondent",

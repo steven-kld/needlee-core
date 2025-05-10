@@ -47,7 +47,8 @@ def get_respondents_reviews(interview_id):
                 "contact": contact_map[rid],
                 "date": row["created_at"].strftime("%Y-%m-%d"),
                 "rate": row["review_data"]["summary"]["rate"],
-                "review": row["review_data"]["summary"]["review"]
+                "review": row["review_data"]["summary"]["review"],
+                "review_data": row["review_data"]
             })
         except Exception as e:
             print(f"⚠️ Failed to parse review for respondent {rid}: {e}")
@@ -63,6 +64,17 @@ def get_respondent(org_id, interview_id, respondent_hash):
         AND respondent_hash = %s
         """,
         (org_id, interview_id, respondent_hash),
+        fetch_one=True
+    )
+    return row if row else None
+
+def get_respondent_by_id(org_id, respondent_id):
+    row = run_query(
+        """
+        SELECT * FROM respondents
+        WHERE id = %s AND organization_id = %s
+        """,
+        (respondent_id, org_id,),
         fetch_one=True
     )
     return row if row else None

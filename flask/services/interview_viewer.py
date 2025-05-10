@@ -2,8 +2,8 @@ from entities import (
     get_interview_by_id,
     get_questions_expected,
     get_respondents_reviews
-
 )
+
 class InterviewViewer:
     def __init__(self, org_id, interview_id):
         self.exists = False

@@ -9,6 +9,7 @@ from services.process_manager import ProcessManager
 from services.organizations_manager import OrganizationManager
 from services.interview_generator import InterviewGenerator
 from services.interview_viewer import InterviewViewer
+from services.respondent_viewer import RespondentViewer
 
 load_dotenv()
 
@@ -18,16 +19,9 @@ app.secret_key = os.getenv("APP_SECRET_KEY")
 CORS(app,
     supports_credentials=True,
     origins=[
-        "https://caretaker.needleetools.com",
-        "https://echo.needleetools.com",
-        "https://hub.needleetools.com",
         "https://caretaker.needlee.ai",
         "https://echo.needlee.ai",
         "https://hub.needlee.ai",
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000", 
-        "http://localhost", 
-        "http://127.0.0.1"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
@@ -92,6 +86,15 @@ def get_interview_details(interview_id):
         message, status = viewer.err
         return jsonify({"error": message}), status
 
+@app.route("/api/respondent-details/<int:respondent_id>", methods=["GET"])
+def get_respondent_details(respondent_id):
+    org_id = session.get("org_id")
+    viewer = RespondentViewer(org_id, respondent_id)
+    if viewer.exists:
+        return jsonify({"recording_url": viewer.url}), 200
+    else:
+        return jsonify({"error": "respondent does not exist"}), 400
+    
 @app.route("/api/gen-interview", methods=["POST"])
 def gen_interview():
     data = request.get_json()

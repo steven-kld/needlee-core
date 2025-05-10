@@ -1,4 +1,4 @@
-from atoms import run_query
+from atoms import run_query, get_bucket, get_signed_url
 
 def get_interviews_for_org(org_id):
     sql = """
@@ -136,3 +136,8 @@ def set_interview_invisible(org_id, interview_id):
         """,
         (interview_id, org_id)
     )
+
+def get_interview_recording_url(org_id, interview_id, respondent_hash):
+    bucket = get_bucket(org_id)
+    path = f"{interview_id}/respondents/{respondent_hash}/interview.webm"
+    return get_signed_url(bucket, path, 3600)
