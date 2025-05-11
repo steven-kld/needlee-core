@@ -32,7 +32,7 @@ class InterviewGenerator:
         if result["language"]:
             self.language = result["language"]
         else:
-            self.language = detect_language(f"{result["questions"][0][1]}; {result["questions"][0][2]}")
+            self.language = detect_language(f"{result['questions'][0][1]}; {result['questions'][0][2]}")
 
         self.display_name = result["display_name"]
         self.description = result["description"]
