@@ -1,4 +1,4 @@
-from entities.gen_interview import generate_interview_from_text, generate_interview_from_questions, prepare_interview_folder, record_interview_questions, upload_interview_audio 
+from entities.gen_interview import generate_interview_from_text, detect_language, generate_interview_from_questions, prepare_interview_folder, record_interview_questions, upload_interview_audio 
 from entities.interviews import create_interview_with_questions
 
 class InterviewGenerator:
@@ -29,7 +29,11 @@ class InterviewGenerator:
         return self
 
     def apply_result(self, result):
-        self.language = result["language"]
+        if result["language"]:
+            self.language = result["language"]
+        else:
+            self.language = detect_language(f"{result["questions"][0][1]}; {result["questions"][0][2]}")
+
         self.display_name = result["display_name"]
         self.description = result["description"]
         self.thank_you_text = result["thank_you_text"]
@@ -43,6 +47,7 @@ class InterviewGenerator:
             (i, q["question"], q["expected"])
             for i, q in enumerate(self.questions)
         ]
+        
         self.interview_id = create_interview_with_questions(
             org_id=self.org_id,
             language=self.language,

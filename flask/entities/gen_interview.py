@@ -62,7 +62,9 @@ Raw text:
 def generate_interview_from_questions(questions):
     pass
 
-def detect_language(text, openai_client):
+def detect_language(text, openai_client=None):
+    if not openai_client:
+        openai_client = init_openai()
     short_sample = text.strip()[:50]
     prompt = f"What language is this text written in? Respond only with the ISO-639-1 code like 'en', 'es', 'fr'.\n\n{short_sample}"
     lang = respond_with_ai(prompt, openai_client)
