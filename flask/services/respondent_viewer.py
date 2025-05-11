@@ -12,6 +12,8 @@ class RespondentViewer:
         self.respondent = get_respondent_by_id(org_id, respondent_id)
         if self.respondent:
             self.exists = True
+            self.interview_id = self.respondent["interview_id"]
+            self.interview_display_name = self.respondent["interview_display_name"]
             self.url = get_interview_recording_url(
                 self.respondent["organization_id"], 
                 self.respondent["interview_id"], 
@@ -42,6 +44,8 @@ class RespondentViewer:
         return {
             **base,
             "respondent": {
+                "interview_id": self.interview_id,
+                "interview_display_name": self.interview_display_name,
                 "id": self.respondent_id,
                 "contact": self.contact,
                 "date": self.created_at.strftime("%Y-%m-%d") if self.created_at else None,
