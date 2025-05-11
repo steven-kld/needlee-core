@@ -37,6 +37,9 @@ class InterviewManager:
             self.err = ("Interview not found", 404)
             return False
 
+        if self.contact:
+            return True
+        
         if self.interview["contact_required"]:
             if not self.contact:
                 self.err = ("Contact is required for this interview", 400)
