@@ -25,10 +25,6 @@ CORS(app,
         "https://caretaker.needlee.ai",
         "https://echo.needlee.ai",
         "https://hub.needlee.ai",
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000", 
-        "http://localhost", 
-        "http://127.0.0.1"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
@@ -48,6 +44,33 @@ def me():
         })
     except ValueError:
         return jsonify({"user": None}), 200  # frontend decides what to show
+
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    try:
+        org = OrganizationManager.create(email=email, password=password)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    session.clear()
+    session['user_id'] = str(uuid.uuid4())
+    session['email'] = org.email
+    session['org_id'] = org.org_id
+    session['display_name'] = org.display_name
+
+    return jsonify({
+        "user": {
+            "id": session['user_id'],
+            "org_id": org.org_id,
+            "email": org.email,
+            "display_name": org.display_name,
+            "interviews": org.interviews
+        }
+    })
 
 @app.route("/api/login", methods=["POST"])
 def login():

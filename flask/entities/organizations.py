@@ -53,30 +53,29 @@ def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password, salt
 
+def insert_new_organization(email, display_name, password):
+    # Check if email already exists
+    exists = run_query(
+        "SELECT 1 FROM organizations WHERE email = %s",
+        (email,),
+        fetch_one=True
+    )
+    if exists:
+        return None  # Already taken
 
+    hashed_password, salt = hash_password(password)
 
-# def insert_new_organization(email, display_name):
-#     if check_organization_email_exists(email):
-#         return False, False
+    result = run_query(
+        """
+        INSERT INTO organizations (email, display_name, hashed_password, salt)
+        VALUES (%s, %s, %s, %s)
+        RETURNING id
+        """,
+        (email, display_name, hashed_password, salt),
+        fetch_one=True
+    )
 
-#     password = generate_password()
-#     hashed_password, salt = hash_password(password)
-
-#     if verify_password(hashed_password, salt, password):
-#         cur, conn = connect_db()
-
-#         cur.execute("""
-#             INSERT INTO organization (email, hashed_password, salt, display_name)
-#             VALUES (%s, %s, %s, %s)
-#             RETURNING id;
-#         """, (email, hashed_password, salt, display_name))
-
-#         organization_id = cur.fetchone()[0]
-
-#         conn.commit()
-#         cur.close()
-#         conn.close()
-#         return organization_id, password
+    return result["id"]
 
 # def get_organization_by_id(id):
 #     cur, conn = connect_db()

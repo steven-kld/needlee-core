@@ -43,6 +43,7 @@ from .process import (
 from .organizations import (
     check_creds,
     set_password,
+    insert_new_organization,
 )
 
 from .gen_interview import (
@@ -92,6 +93,7 @@ __all__ = [
     # Organizations
     "check_creds",
     "set_password",
+    "insert_new_organization",
 
     # Gen Interview
     "generate_interview_from_text",
