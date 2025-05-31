@@ -25,6 +25,7 @@ CORS(app,
         "https://caretaker.needlee.ai",
         "https://echo.needlee.ai",
         "https://hub.needlee.ai",
+        "http://localhost"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
