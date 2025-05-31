@@ -10,10 +10,12 @@ from services.organizations_manager import OrganizationManager
 from services.interview_generator import InterviewGenerator
 from services.interview_viewer import InterviewViewer
 from services.respondent_viewer import RespondentViewer
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = os.getenv("APP_SECRET_KEY")
 app.config['SESSION_COOKIE_DOMAIN'] = '.needlee.ai'
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
