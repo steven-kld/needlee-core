@@ -1,4 +1,4 @@
-from atoms import run_query
+from atoms import run_query, create_org_bucket
 import bcrypt, random, string, os
 
 def check_creds(email, password):
@@ -74,6 +74,8 @@ def insert_new_organization(email, display_name, password):
         (email, display_name, hashed_password, salt),
         fetch_one=True
     )
+    
+    create_org_bucket(result["id"])
 
     return result["id"]
 

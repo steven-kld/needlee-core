@@ -3,6 +3,7 @@ from atoms import (
     init_openai, 
     respond_with_ai,
     synthesize_voice,
+    create_org_bucket,
     get_bucket,
     create_empty_blob,
     upload_blob_from_bytes,
@@ -89,6 +90,7 @@ def record_interview_questions(questions):
     return audio_blobs
 
 def prepare_interview_folder(org_id, interview_id):
+    create_org_bucket(org_id)
     bucket = get_bucket(org_id)
     create_empty_blob(bucket, f"{interview_id}/questions/.ready")
     create_empty_blob(bucket, f"{interview_id}/respondents/.ready")

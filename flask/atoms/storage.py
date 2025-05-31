@@ -25,6 +25,13 @@ def init_google_credentials():
 def get_client():
     return storage.Client(credentials=init_google_credentials(), project=os.getenv("GOOGLE_PROJECT_ID"))
 
+def create_org_bucket(org_id):
+    client = get_client()
+    bucket_name = f"o_{org_id}"
+    if not client.lookup_bucket(bucket_name):
+        client.create_bucket(bucket_name)
+    print(f"✅ Bucket created or verified: {bucket_name}")
+
 def get_bucket(org_id, logger=None):
     client = get_client()
     bucket_name = f"o_{org_id}"
@@ -164,12 +171,7 @@ def upload_blob_from_bytes(bucket, path, data_bytes, content_type="application/o
 #     blob = bucket.blob(path)
 #     blob.upload_from_string("")
 
-# def create_org_bucket(org_id):
-#     client = get_client()
-#     bucket_name = f"o_{org_id}"
-#     if not client.lookup_bucket(bucket_name):
-#         client.create_bucket(bucket_name)
-#     print(f"✅ Bucket created or verified: {bucket_name}")
+
 
 # def create_interview_folder(org_id, interview_id):
 #     bucket = get_bucket(org_id)

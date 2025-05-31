@@ -3,6 +3,7 @@ from .db import (
 )
 
 from .storage import (
+    create_org_bucket,
     get_bucket,
     blob_exists,
     create_empty_blob,
@@ -35,6 +36,7 @@ from .video import (
 
 __all__ = [
     "run_query",
+    "create_org_bucket",
     "get_bucket",
     "blob_exists",
     "create_empty_blob",
