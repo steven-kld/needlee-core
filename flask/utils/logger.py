@@ -28,7 +28,7 @@ class SessionLogger:
             self.timer = time.time()  # auto-reset
 
 class LogManager:
-    def __init__(self, logger_name="Needlee", log_path="/", log_file="main.log", uuid=None):
+    def __init__(self, logger_name="Echo", log_path="/", log_file="main.log", uuid=None):
         self.log_path = log_path
         self.log_file = log_file
         self.uuid = uuid

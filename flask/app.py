@@ -17,19 +17,16 @@ app = Flask(__name__)
 
 app.secret_key = os.getenv("APP_SECRET_KEY")
 
-app.config['SESSION_COOKIE_DOMAIN'] = '.needlee.ai'
+app.config['SESSION_COOKIE_DOMAIN'] = '.getecho.io'
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
 
 CORS(app,
     supports_credentials=True,
     origins=[
-        "https://caretaker.needleetools.com",
-        "https://echo.needleetools.com",
-        "https://hub.needleetools.com",
-        "https://caretaker.needlee.ai",
-        "https://echo.needlee.ai",
-        "https://hub.needlee.ai",
+        "https://talk.getecho.com",
+        "https://hub.getecho.com",
+        "https://caretaker.getecho.com"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])

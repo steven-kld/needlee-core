@@ -59,7 +59,7 @@ class ProcessManager:
         os.makedirs(local_dir, exist_ok=True)
 
         log_manager = LogManager(
-            logger_name="NeedleeCore",
+            logger_name="EchoCore",
             log_path=f"{local_dir}/",
             log_file="process.log",
             uuid=self.user_id

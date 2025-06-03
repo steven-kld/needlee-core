@@ -1,4 +1,4 @@
-# needlee.core
+# echo.core
 
 ✅ Minimum server requirements
 OS: Ubuntu 22.04 LTS
@@ -30,4 +30,4 @@ echo \
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-/root/needlee-core/.env -> env
+/root/echo-core/.env -> env
