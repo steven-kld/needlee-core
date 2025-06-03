@@ -24,9 +24,9 @@ app.config['SESSION_COOKIE_SECURE'] = True
 CORS(app,
     supports_credentials=True,
     origins=[
-        "https://talk.getecho.com",
-        "https://hub.getecho.com",
-        "https://caretaker.getecho.com"
+        "https://talk.getecho.io",
+        "https://hub.getecho.io",
+        "https://caretaker.getecho.io"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
