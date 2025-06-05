@@ -1,5 +1,5 @@
 from utils.logger import LogManager
-import openai, os, shutil, time
+import openai, os, shutil, time, json
 from entities import (
     update_respondent_status,
     get_respondent,
@@ -15,11 +15,12 @@ from entities import (
 )
 
 class ProcessManager:
-    def __init__(self, organization_id, interview_id, user_id, attempt):
+    def __init__(self, organization_id, interview_id, user_id, attempt, integration):
         self.organization_id = organization_id
         self.interview_id = interview_id
         self.user_id = user_id
         self.attempt = attempt
+        self.integration = integration
         
         self.language_code = None
         self.language_name = None
@@ -65,7 +66,12 @@ class ProcessManager:
             uuid=self.user_id
         )
         self.logger = log_manager.get_session_logger()
-        
+
+        if self.integration:
+            self.logger.info("Integration mode")
+            self.logger.info(self.integration.get("in", "unknown source"))
+            self.logger.info("Integration mode: %s", json.dumps(self.integration, ensure_ascii=False))
+
         try:
             self.language_code = get_interview_by_id(self.organization_id, self.interview_id)['language']
         except:

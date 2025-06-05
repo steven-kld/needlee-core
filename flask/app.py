@@ -260,6 +260,7 @@ def close_interview():
     interview_id = data.get('i')
     uuid = data.get('uuid')
     attempt = data.get('attempt')
+    integration = data.get("integration")
 
     if not org_id or not interview_id or not uuid or not attempt:
         return jsonify({"error": "Missing required fields"}), 400
@@ -268,7 +269,7 @@ def close_interview():
         manager = InterviewManager(org_id, interview_id, None, uuid)
         manager.close_interview()
 
-        process_interview(org_id, interview_id, uuid, attempt)
+        process_interview(org_id, interview_id, uuid, attempt, integration)
 
         return jsonify({"status": "ok"})
     
@@ -278,11 +279,11 @@ def close_interview():
 
 @app.route('/api/process/<organization_id>/<interview_id>/<user_id>/<attempt>')
 def api_process_interview(organization_id, interview_id, user_id, attempt):
-    process_interview(organization_id, interview_id, user_id, attempt)
+    process_interview(organization_id, interview_id, user_id, attempt, False)
     return {"r": "none"}, 200
 
-def process_interview(organization_id, interview_id, user_id, attempt):    
-    process = ProcessManager(organization_id, interview_id, user_id, attempt)
+def process_interview(organization_id, interview_id, user_id, attempt, integration):    
+    process = ProcessManager(organization_id, interview_id, user_id, attempt, integration)
     if process.valid == False: print("Invalid")
     threading.Thread(target=lambda: process.process(), daemon=True).start()
     return
