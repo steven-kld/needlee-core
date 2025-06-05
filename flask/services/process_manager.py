@@ -1,4 +1,5 @@
 from utils.logger import LogManager
+from utils.integration import run_integration
 import openai, os, shutil, time, json
 from entities import (
     update_respondent_status,
@@ -130,6 +131,12 @@ class ProcessManager:
             set_respondent_score(self.respondent_id, data["summary"]["rate"])
             upload_interview(self.user_id, self.respondent_id, self.interview_id, self.organization_id, data, self.logger)
             shutil.rmtree(f"temp/{self.user_id}")
+            run_integration(
+                self.integration,
+                score=data["summary"]["rate"],
+                review=data["summary"]["review"],
+                logger=self.logger.info
+            )
 
                 
             
