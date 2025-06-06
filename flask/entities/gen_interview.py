@@ -47,7 +47,7 @@ Raw text:
 """
 
     estimated_tokens = len(prompt) // 4
-    max_tokens = min(int(estimated_tokens * 1.25), 6000)
+    max_tokens = max(min(int(estimated_tokens * 1.25), 6000), 3000)
 
     response = respond_with_ai(prompt, openai_client=openai_client, max_tokens=max_tokens)
 
