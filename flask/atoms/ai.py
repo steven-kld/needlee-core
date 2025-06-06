@@ -9,8 +9,8 @@ ELEVENLABS_VOICE_ID = None
 
 def synthesize_voice(text):
     global ELEVENLABS_VOICE_ID
-    if ELEVENLABS_VOICE_ID == None:
-        ELEVENLABS_VOICE_ID = get_voice_id_by_name("Alice")
+    if ELEVENLABS_VOICE_ID is None:
+        ELEVENLABS_VOICE_ID = get_voice_id_by_name("Rachel")
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
     headers = {
@@ -18,12 +18,15 @@ def synthesize_voice(text):
         "Content-Type": "application/json",
         "Accept": "audio/mpeg"
     }
+
     payload = {
         "text": text,
         "model_id": "eleven_multilingual_v2",
         "voice_settings": {
             "stability": 0.3,
-            "similarity_boost": 0.8
+            "similarity_boost": 0.65,
+            "style": 0.35,
+            "use_speaker_boost": True
         }
     }
 
@@ -32,10 +35,18 @@ def synthesize_voice(text):
         return response.content
     else:
         raise Exception(f"ElevenLabs TTS failed: {response.status_code} - {response.text}")
-    
+
+def list_available_voices():
+    url = "https://api.elevenlabs.io/v2/voices"
+    headers = { "xi-api-key": os.getenv("ELEVENLABS_API_KEY") }
+    response = requests.get(url, headers=headers)
+    voices = response.json().get("voices", [])
+    for v in voices:
+        print(f"- {v['name']} (ID: {v['voice_id']})")
+
 def get_voice_id_by_name(voice_name: str):
     response = requests.get(
-        "https://api.elevenlabs.io/v1/voices", 
+        "https://api.elevenlabs.io/v2/voices", 
         headers={ "xi-api-key": ELEVENLABS_API_KEY }
     )
     if response.status_code != 200:

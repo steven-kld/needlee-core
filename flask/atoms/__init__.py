@@ -20,6 +20,7 @@ from .ai import (
     init_openai,
     init_whisper,
     synthesize_voice,
+    list_available_voices,
     silence_prob,
     respond_with_ai,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "init_openai",
     "init_whisper",
     "synthesize_voice",
+    "list_available_voices",
     "silence_prob",
     "respond_with_ai",
     "get_real_duration",
