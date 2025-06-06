@@ -64,11 +64,23 @@ def generate_interview_from_questions(questions):
     pass
 
 def detect_language(text, openai_client=None):
+    supported_langs = ["en", "fr", "ru", "es", "de"]
+
     if not openai_client:
         openai_client = init_openai()
+        
     short_sample = text.strip()[:50]
     prompt = f"What language is this text written in? Respond only with the ISO-639-1 code like 'en', 'es', 'fr'.\n\n{short_sample}"
     lang = respond_with_ai(prompt, openai_client)
+
+    if lang.strip().lower() not in supported_langs:
+        short_sample = text.strip()[:300]
+        prompt = f"What language is this text written in? Respond only with the ISO-639-1 code like 'en', 'es', 'fr'.\n\n{short_sample}"
+        lang = respond_with_ai(prompt, openai_client)
+
+    if lang.strip().lower() not in supported_langs:
+        return "en"
+    
     return lang.strip().lower()
 
 def extract_json_block(text):
