@@ -121,6 +121,7 @@ def generate_transcription(user_id, questions, logger, language_code):
             "expected": expected,
             "answer": transcription
         })
+        logger.log_time(f"question {question} | expected {expected} | transcription {transcription}")
         logger.log_time(f"✅ Question {question_num} transcribed")
         
     return data
