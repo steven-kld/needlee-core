@@ -99,6 +99,13 @@ def generate_transcription(user_id, questions, logger, language_code):
         # logger.log_time(response)
 
         # language = response.language
+        openai_client = None
+        try:
+            openai_client = init_openai()
+            logger.log_time(f"✅ OpenAI client is ready")
+        except Exception as e:
+            logger.exception(f"❌ Failed to initialize OpenAI client: {e}")
+            return None
         
         for chunk_idx in chunks:
             file = f"temp/{user_id}/{question_num}_{chunk_idx}.webm"
@@ -114,7 +121,7 @@ def generate_transcription(user_id, questions, logger, language_code):
                 logger.log_time(f"Speech detected on {question_num}_{chunk_idx}.wav")
 
                 text = deepgram_transcribe(wav_file, language_code)
-
+                
                 if text is None:
                     logger.exception(f"⚠️ Skipped corrupt or unreadable chunk: {file}")
                     continue
@@ -125,7 +132,9 @@ def generate_transcription(user_id, questions, logger, language_code):
 
         if transcription == "":
             transcription = "No answer provided"
-        
+        else:
+            transcription = _fix_transcription(transcription, question, expected, openai_client)
+
         data.append({
             "question": question,
             "expected": expected,
@@ -135,7 +144,20 @@ def generate_transcription(user_id, questions, logger, language_code):
         logger.log_time(f"✅ Question {question_num} transcribed")
         
     return data
-    
+
+def _fix_transcription(transcription, question, expected, openai_client):
+    prompt = f"""
+Respondent's answer was processed with AI, so some words could be misunderstood. Fix the answer's grammar, using the question and expected answer as context.
+
+Question: {question}
+Expected answer: {expected}
+Respondent's answer: {transcription}
+
+Respond strictly with fixed respondent's answer as text.
+Do not include any formatting like ```json. Return plain valid string only.
+"""
+    response = respond_with_ai(prompt, openai_client)
+    return response
 
 def _group_chunks(user_id, logger=None):
     folder = f"temp/{user_id}"
@@ -180,7 +202,6 @@ def rate_answer_set(data, logger, language_name):
     for item in data:
         prompt = f"""
 You are evaluating an interview fragment. The input is in {language_name}. The review must also be in {language_name}.
-Respondent's answer was processed with AI, so some words could be misunderstood. Fix the answer's grammar before rating, using the question and expected answer as context.
 
 Question: {item["question"]}
 Expected answer: {item["expected"]}
