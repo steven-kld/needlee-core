@@ -4,6 +4,8 @@ from faster_whisper import WhisperModel
 
 load_dotenv()
 
+DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+DEEPGRAM_LANGS = {"en", "ru", "fr", "de", "es", "it", "pt", "nl"}
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELEVENLABS_VOICE_ID = None
 
@@ -96,3 +98,26 @@ def respond_with_ai(prompt, openai_client, max_tokens=500):
     )
     return response.choices[0].message.content
 
+def deepgram_transcribe(wav_path, language="en"):
+    if language not in DEEPGRAM_LANGS:
+        print(f"⚠️ Language '{language}' not supported by Deepgram")
+        return None
+
+    url = f"https://api.deepgram.com/v1/listen?model=nova-3&language={language}"
+    headers = {
+        "Authorization": f"Token {DEEPGRAM_API_KEY}",
+        "Content-Type": "audio/wav"
+    }
+
+    try:
+        with open(wav_path, "rb") as f:
+            audio = f.read()
+
+        response = requests.post(url, headers=headers, data=audio)
+        response.raise_for_status()
+
+        data = response.json()
+        return data["results"]["channels"][0]["alternatives"][0]["transcript"]
+    except Exception as e:
+        print(f"❌ Deepgram STT failed for {wav_path}: {e}")
+        return None

@@ -7,6 +7,7 @@ from atoms import (
     get_last_attempt, 
     init_whisper,
     convert_webm_to_wav, 
+    deepgram_transcribe,
     silence_prob, 
     init_openai, 
     respond_with_ai, 
@@ -86,24 +87,33 @@ def generate_transcription(user_id, questions, logger, language_code):
         question = questions[question_num]["question"]
         expected = questions[question_num]["expected"]
         transcription = ""
+
+        # Detect lang
+        # with open(wav_file, "rb") as buffer:
+        #         response = openai_client.audio.transcriptions.create(
+        #             model="whisper-1",
+        #             file=buffer,
+        #             response_format="verbose_json"
+        #         )
+        # logger.log_time(f"STT response: {response.text}")
+        # logger.log_time(response)
+
+        # language = response.language
+        
         for chunk_idx in chunks:
             file = f"temp/{user_id}/{question_num}_{chunk_idx}.webm"
             wav_file = f"temp/{user_id}/{question_num}_{chunk_idx}.wav"
+            
             try:
                 convert_webm_to_wav(file, wav_file)
 
                 if silence_prob(wav_file, whisper, language_code) > 0.45:
                     logger.exception(f"⚠️ Skipped silent or unclear chunk: {file}")
                     continue
-                
-                with open(wav_file, "rb") as buffer:
-                    response = openai_client.audio.transcriptions.create(
-                        model="whisper-1",
-                        file=buffer,
-                        response_format="verbose_json"
-                    )
 
-                text = response.text
+                logger.log_time(f"Speech detected on {question_num}_{chunk_idx}.wav")
+
+                text = deepgram_transcribe(wav_file, language_code)
 
                 if text is None:
                     logger.exception(f"⚠️ Skipped corrupt or unreadable chunk: {file}")
@@ -170,6 +180,7 @@ def rate_answer_set(data, logger, language_name):
     for item in data:
         prompt = f"""
 You are evaluating an interview fragment. The input is in {language_name}. The review must also be in {language_name}.
+Respondent's answer was processed with AI, so some words could be misunderstood. Fix the answer's grammar before rating, using the question and expected answer as context.
 
 Question: {item["question"]}
 Expected answer: {item["expected"]}

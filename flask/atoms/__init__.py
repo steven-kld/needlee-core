@@ -23,6 +23,7 @@ from .ai import (
     list_available_voices,
     silence_prob,
     respond_with_ai,
+    deepgram_transcribe,
 )
 
 from .video import (
@@ -54,6 +55,7 @@ __all__ = [
     "list_available_voices",
     "silence_prob",
     "respond_with_ai",
+    "deepgram_transcribe",
     "get_real_duration",
     "has_frames",
     "needs_fixing",

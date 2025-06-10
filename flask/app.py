@@ -294,3 +294,12 @@ def process_interview(organization_id, interview_id, user_id, attempt, integrati
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9091, debug=True)
 
+    # process = ProcessManager(
+    #     8,
+    #     32,
+    #     "6bc2d13a-24c7-4f44-9503-ef511108770b",
+    #     1,
+    #     False
+    # )
+    # if process.valid == False: print("Invalid")
+    # process.process()
