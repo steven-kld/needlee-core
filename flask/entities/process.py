@@ -147,14 +147,17 @@ def generate_transcription(user_id, questions, logger, language_code):
 
 def _fix_transcription(transcription, question, expected, openai_client):
     prompt = f"""
-Respondent's answer was processed with AI, so some words could be misunderstood. Fix the answer's grammar, using the question and expected answer as context.
+The respondent's answer was transcribed by AI and may contain minor recognition errors.
+
+Your task is to correct only obvious spelling or grammatical mistakes without changing the original word order or adding new information.
+
+Use the question and expected answer as context to resolve unclear words, but DO NOT rephrase, reorder, or complete the answer.
 
 Question: {question}
 Expected answer: {expected}
 Respondent's answer: {transcription}
 
-Respond strictly with fixed respondent's answer as text.
-Do not include any formatting like ```json. Return plain valid string only.
+Return the fixed version of the respondent's answer as a plain string. No formatting, no extra comments.
 """
     response = respond_with_ai(prompt, openai_client)
     return response
