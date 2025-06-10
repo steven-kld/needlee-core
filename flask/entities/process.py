@@ -79,7 +79,7 @@ def generate_transcription(user_id, questions, logger, language_code):
         logger.exception(f"❌ Failed to group chunks")
         return None
     logger.log_time(f"✅ Chunks grouped")
-
+    logger.log_time(f"{grouped}")
     data = []
 
     for question_num, chunks in grouped.items():
