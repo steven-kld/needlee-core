@@ -1,4 +1,4 @@
-# echo.core
+# core.tete-a-tete
 
 ✅ Minimum server requirements
 OS: Ubuntu 22.04 LTS
