@@ -99,11 +99,11 @@ def respond_with_ai(prompt, openai_client, max_tokens=500):
     return response.choices[0].message.content
 
 def deepgram_transcribe(wav_path, language="en"):
-    if language not in DEEPGRAM_LANGS:
-        print(f"⚠️ Language '{language}' not supported by Deepgram")
-        return None
+    # if language not in DEEPGRAM_LANGS:
+    #     print(f"⚠️ Language '{language}' not supported by Deepgram")
+    #     return None
 
-    url = f"https://api.deepgram.com/v1/listen?model=nova-3&language={language}"
+    url = f"https://api.deepgram.com/v1/listen?model=nova-3&language=multi"
     headers = {
         "Authorization": f"Token {DEEPGRAM_API_KEY}",
         "Content-Type": "audio/wav"
