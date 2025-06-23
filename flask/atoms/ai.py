@@ -1,4 +1,4 @@
-import os, openai, requests
+import os, openai, requests, json
 from dotenv import load_dotenv
 from faster_whisper import WhisperModel
 
@@ -80,11 +80,11 @@ def silence_prob(path, whisper_model, language=None):
         print(f"❌ Transcription failed for {path}: {e}")
         return 1.0
     
-def respond_with_ai(prompt, openai_client, max_tokens=500):
+def respond_with_ai(prompt, openai_client, max_tokens=500, model="gpt-4.1", role="user"):
     response = openai_client.chat.completions.create(
-        model="gpt-4o",
+        model=model,
         messages=[{
-            "role": "user",
+            "role": role,
             "content": prompt
         }],
         response_format={
@@ -96,7 +96,12 @@ def respond_with_ai(prompt, openai_client, max_tokens=500):
         frequency_penalty=0,
         presence_penalty=0
     )
-    return response.choices[0].message.content
+
+    input_tokens = response.usage.prompt_tokens       # ← number of input tokens
+    output_tokens = response.usage.completion_tokens   # ← number of output tokens
+    in_cost, out_cost = gpt_cost(model, input_tokens, output_tokens)
+    print(in_cost, out_cost)
+    return response.choices[0].message.content, in_cost, out_cost
 
 def deepgram_transcribe(wav_path, language="en"):
     # if language not in DEEPGRAM_LANGS:
@@ -117,7 +122,43 @@ def deepgram_transcribe(wav_path, language="en"):
         response.raise_for_status()
 
         data = response.json()
-        return data["results"]["channels"][0]["alternatives"][0]["transcript"]
+        duration = data["metadata"]["duration"]
+        text = data["results"]["channels"][0]["alternatives"][0]["transcript"]
+
+        return text, deepgram_cost(duration), duration
     except Exception as e:
         print(f"❌ Deepgram STT failed for {wav_path}: {e}")
-        return None
+        return None, 0.0, 0.0
+
+def deepgram_cost(duration):
+    price_minute = 0.0054 # Multi Nova-3 price Pay As You Go
+    price_second = price_minute / 60
+    return round(
+        round(float(duration)) * price_second, 6
+    )
+
+def gpt_cost(model: str, input_tokens: int, output_tokens: int):
+    PRICING = {
+        "gpt-4.1": {
+            "input": 2.00 / 1_000_000,
+            "output": 8.00 / 1_000_000
+        },
+        "gpt-4.1-mini": {
+            "input": 0.40 / 1_000_000,
+            "output": 1.60 / 1_000_000
+        },
+        "gpt-4.1-nano": {
+            "input": 0.10 / 1_000_000,
+            "output": 0.40 / 1_000_000
+        }
+    }
+    p = PRICING[model]
+    return round(input_tokens * p["input"], 6), round(output_tokens * p["output"], 6)
+
+def log_cost(component, cost_usd, metadata=None):
+    log = {
+        "component": component,
+        "cost_usd": round(cost_usd, 6),
+        "metadata": metadata or {},
+    }
+    print("💰 COST LOG:", json.dumps(log))  # Replace with file/DB write if needed

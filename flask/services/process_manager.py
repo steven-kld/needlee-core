@@ -13,6 +13,8 @@ from entities import (
     build_video,
     set_respondent_score,
     upload_interview,
+    summarize_cost,
+    insert_interview_cost
 )
 
 class ProcessManager:
@@ -22,7 +24,8 @@ class ProcessManager:
         self.user_id = user_id
         self.attempt = attempt
         self.integration = integration
-        
+        self.start_time = time.time()
+
         self.language_code = None
         self.language_name = None
         self.valid = False
@@ -30,7 +33,11 @@ class ProcessManager:
         self.questions = []
         self.openai_client = None
         self.logger = None
-        
+        self.cost_log = {
+            "deepgram": [],
+            "gpt": []
+        }
+
         try:
             self._validate_inputs()
             self.questions = get_questions_expected(self.interview_id)
@@ -116,13 +123,17 @@ class ProcessManager:
 
         self.logger.info(f"✅ Files downloading complete")
         
-        data = generate_transcription(self.user_id, self.questions, self.logger, self.language_code)
+        data = generate_transcription(self.user_id, self.questions, self.logger, self.language_code, self.cost_log)
+        self.logger.info(f"✅ Cost log update")
+        self.logger.info(self.cost_log)
         if not data:
             self.logger.error("❌ Transcription step failed - stopping.")
             return
         else:
-            data = rate_answer_set(data, self.logger, self.language_name)
+            data = rate_answer_set(data, self.logger, self.language_name, self.cost_log)
             self.logger.info(f"✅ Rating step complete")
+            self.logger.info(f"✅ Cost log update")
+            self.logger.info(self.cost_log)
         
         timecodes = build_video(self.user_id, len(data["interview"]), self.logger)
         if timecodes != {}:
@@ -130,6 +141,8 @@ class ProcessManager:
             data["timecodes"] = timecodes
             set_respondent_score(self.respondent_id, data["summary"]["rate"])
             upload_interview(self.user_id, self.respondent_id, self.interview_id, self.organization_id, data, self.logger)
+            summarize_cost(self.cost_log, round(time.time() - self.start_time, 2))
+            insert_interview_cost(self.respondent_id, self.interview_id, self.organization_id, self.cost_log, self.logger)
             shutil.rmtree(f"temp/{self.user_id}")
             self.logger.info(f"✅ Upload completed")
             self.logger.info(f'Rate: {data["summary"]["rate"]}, Review: {data["summary"]["rate"]}')

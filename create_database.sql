@@ -54,3 +54,16 @@ CREATE TABLE reviews (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   review_data JSONB
 );
+
+CREATE TABLE interview_costs (
+  respondent_id INT PRIMARY KEY REFERENCES respondents(id) ON DELETE CASCADE,
+  interview_id INT REFERENCES interviews(id) ON DELETE CASCADE,
+  org_id INT REFERENCES organizations(id) ON DELETE CASCADE,
+  total_cost FLOAT NOT NULL,
+  transcribe_cost FLOAT NOT NULL,
+  reasoning_cost FLOAT NOT NULL,
+  cost_details JSONB NOT NULL,
+  duration_sec FLOAT NOT NULL,
+  processing_time_sec FLOAT NOT NULL,
+  processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

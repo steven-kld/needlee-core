@@ -57,7 +57,7 @@ def download_attempt_files(org_id, interview_id, user_id, attempt, logger):
         logger.exception(f"❌ Error during download_attempt_files: {e}")
         return []
 
-def generate_transcription(user_id, questions, logger, language_code):
+def generate_transcription(user_id, questions, logger, language_code, cost_log):
     whisper = None
     openai_client = None
 
@@ -120,8 +120,12 @@ def generate_transcription(user_id, questions, logger, language_code):
 
                 logger.log_time(f"Speech detected on {question_num}_{chunk_idx}.wav")
 
-                text = deepgram_transcribe(wav_file, language_code)
-                
+                text, deepgram_price, duration = deepgram_transcribe(wav_file, language_code)
+                cost_log["deepgram"].append({
+                    "type": "translate",
+                    "sec": round(duration, 2),
+                    "price": round(deepgram_price, 6)
+                })
                 if text is None:
                     logger.exception(f"⚠️ Skipped corrupt or unreadable chunk: {file}")
                     continue
@@ -133,7 +137,13 @@ def generate_transcription(user_id, questions, logger, language_code):
         if transcription == "":
             transcription = "No answer provided"
         else:
-            transcription = _fix_transcription(transcription, question, expected, openai_client)
+            transcription, transcription_in_price, transcription_out_price = _fix_transcription(transcription, question, expected, openai_client)
+            cost_log["gpt"].append({
+                "type": "fix",
+                "token_in_price": round(transcription_in_price, 6),
+                "token_out_price": round(transcription_out_price, 6),
+                "total_price": round(transcription_in_price + transcription_out_price, 6)
+            })
 
         data.append({
             "question": question,
@@ -159,8 +169,8 @@ Respondent's answer: {transcription}
 
 Return the fixed version of the respondent's answer as a plain string. No formatting, no extra comments.
 """
-    response = respond_with_ai(prompt, openai_client)
-    return response
+    response, in_price, out_price = respond_with_ai(prompt, openai_client, 1000, "gpt-4.1-mini")
+    return response, in_price, out_price
 
 def _group_chunks(user_id, logger=None):
     folder = f"temp/{user_id}"
@@ -191,7 +201,7 @@ def _group_chunks(user_id, logger=None):
 
     return dict(grouped)
 
-def rate_answer_set(data, logger, language_name):
+def rate_answer_set(data, logger, language_name, cost_log):
     openai_client = None
     try:
         openai_client = init_openai()
@@ -225,8 +235,13 @@ Respond strictly in JSON in {language_name}:
 
 Do not include any formatting like ```json. Return plain valid JSON only.
 """
-        response = respond_with_ai(prompt, openai_client)
-        
+        response, in_price, out_price = respond_with_ai(prompt, openai_client, 4000)
+        cost_log["gpt"].append({
+            "type": "review",
+            "token_in_price": round(in_price, 6),
+            "token_out_price": round(out_price, 6),
+            "total_price": round(in_price + out_price, 6)
+        })
         try:
             parsed = json.loads(
                 extract_json_block(response)
@@ -241,14 +256,14 @@ Do not include any formatting like ```json. Return plain valid JSON only.
         rated.append(item)
         logger.log_time(f"✅ Question successfully rated | Question: {item['question']} | Rate {item['rate']}")
     
-    summary = summarize_interview(rated, openai_client, logger, language_name)
+    summary = summarize_interview(rated, openai_client, logger, language_name, cost_log)
     logger.log_time(f"✅ Summary success | Rate {summary['rate']}")
     return {
         "interview": rated,
         "summary": summary
     }
 
-def summarize_interview(rated, openai_client, logger, language_name):
+def summarize_interview(rated, openai_client, logger, language_name, cost_log):
     prompt = f"Below are interview answers in {language_name}:\n\n"
 
     for item in rated:
@@ -271,7 +286,14 @@ Respond strictly in JSON in {language_name}:
 
 Do not include markdown or ```json - return only valid JSON.
 """
-    response = respond_with_ai(prompt, openai_client, max_tokens=4000)
+    response, in_price, out_price = respond_with_ai(prompt, openai_client, max_tokens=6000)
+
+    cost_log["gpt"].append({
+        "type": "summarize",
+        "token_in_price": round(in_price, 6),
+        "token_out_price": round(out_price, 6),
+        "total_price": round(in_price + out_price, 6)
+    })
 
     try:
         result = json.loads(
@@ -422,4 +444,48 @@ def insert_review(respondent_id, interview_id, data_json, logger):
         )
     except Exception as e:
         logger.exception(f"Failed to insert review for respondent {respondent_id}: {e}")
+        return None
+
+def summarize_cost(cost_log, processing_time_sec):
+    deepgram = cost_log.get("deepgram", [])
+    gpt = cost_log.get("gpt", [])
+
+    transcribe_cost = round(sum(item["price"] for item in deepgram), 6)
+    reasoning_cost = round(sum(item.get("total_price", 0) for item in gpt), 6)
+    total_cost = round(transcribe_cost + reasoning_cost, 6)
+    duration_sec = round(sum(item["sec"] for item in deepgram), 2)
+
+    cost_log["total_cost"] = total_cost
+    cost_log["transcribe_cost"] = transcribe_cost
+    cost_log["reasoning_cost"] = reasoning_cost
+    cost_log["duration_sec"] = duration_sec
+    cost_log["processing_time_sec"] = processing_time_sec
+
+
+def insert_interview_cost(respondent_id, interview_id, org_id, cost_log, logger):
+    try:
+        return run_query(
+            """
+            INSERT INTO interview_costs (
+                respondent_id, interview_id, org_id,
+                total_cost, transcribe_cost, reasoning_cost,
+                cost_details, duration_sec, processing_time_sec
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING *
+            """,
+            (
+                respondent_id,
+                interview_id,
+                org_id,
+                cost_log["total_cost"],
+                cost_log["transcribe_cost"],
+                cost_log["reasoning_cost"],
+                json.dumps(cost_log),
+                cost_log["duration_sec"],
+                cost_log["processing_time_sec"]
+            ),
+            fetch_one=True
+        )
+    except Exception as e:
+        logger.exception(f"❌ Failed to insert interview cost for respondent {respondent_id}: {e}")
         return None
