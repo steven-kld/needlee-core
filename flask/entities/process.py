@@ -455,9 +455,9 @@ def summarize_cost(cost_log, processing_time_sec):
     total_cost = round(transcribe_cost + reasoning_cost, 6)
     duration_sec = round(sum(item["sec"] for item in deepgram), 2)
 
-    cost_log["total_cost"] = total_cost
-    cost_log["transcribe_cost"] = transcribe_cost
-    cost_log["reasoning_cost"] = reasoning_cost
+    cost_log["total_cost"] = f"{total_cost:.6f}"
+    cost_log["transcribe_cost"] = f"{transcribe_cost:.6f}"
+    cost_log["reasoning_cost"] = f"{reasoning_cost:.6f}"
     cost_log["duration_sec"] = duration_sec
     cost_log["processing_time_sec"] = processing_time_sec
 
