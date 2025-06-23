@@ -1,6 +1,7 @@
 import os, openai, requests, json
 from dotenv import load_dotenv
 from faster_whisper import WhisperModel
+from decimal import Decimal, ROUND_HALF_UP
 
 load_dotenv()
 
@@ -140,20 +141,25 @@ def deepgram_cost(duration):
 def gpt_cost(model: str, input_tokens: int, output_tokens: int):
     PRICING = {
         "gpt-4.1": {
-            "input": 2.00 / 1_000_000,
-            "output": 8.00 / 1_000_000
+            "input": Decimal("0.00000200"),
+            "output": Decimal("0.00000800")
         },
         "gpt-4.1-mini": {
-            "input": 0.40 / 1_000_000,
-            "output": 1.60 / 1_000_000
+            "input": Decimal("0.00000040"),
+            "output": Decimal("0.00000160")
         },
         "gpt-4.1-nano": {
-            "input": 0.10 / 1_000_000,
-            "output": 0.40 / 1_000_000
+            "input": Decimal("0.00000010"),
+            "output": Decimal("0.00000040")
         }
     }
+
     p = PRICING[model]
-    return round(input_tokens * p["input"], 6), round(output_tokens * p["output"], 6)
+    in_cost = (Decimal(input_tokens) * p["input"]).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+    out_cost = (Decimal(output_tokens) * p["output"]).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
+
+    return float(in_cost), float(out_cost)
+
 
 def log_cost(component, cost_usd, metadata=None):
     log = {
