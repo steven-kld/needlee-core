@@ -147,7 +147,7 @@ class ProcessManager:
             try:
                 deducted_amount = deduct_balance(
                     self.organization_id, 
-                    (self.cost_log["processing_time_sec"] / 60)
+                    (self.cost_log["duration_sec"] / 60)
                 )
                 self.logger.info(f'Deducted ${deducted_amount}')
             except Exception as e:
