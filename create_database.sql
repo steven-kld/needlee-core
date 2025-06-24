@@ -67,3 +67,21 @@ CREATE TABLE interview_costs (
   processing_time_sec FLOAT NOT NULL,
   processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE billing_accounts (
+  org_id INTEGER PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+  cash_balance NUMERIC(10, 2) NOT NULL DEFAULT 50.00,    -- starts with $50 free credit
+  last_billed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,    -- tracks last cost deducted
+  auto_recharge BOOLEAN DEFAULT FALSE,
+  recharge_threshold NUMERIC(10, 2) DEFAULT 5.00,
+  recharge_amount NUMERIC(10, 2) DEFAULT 20.00
+);
+
+CREATE TABLE organization_payments (
+  id SERIAL PRIMARY KEY,
+  org_id INTEGER REFERENCES organizations(id) ON DELETE CASCADE,
+  amount NUMERIC(10, 2) NOT NULL,
+  method VARCHAR(50),                  -- e.g. 'stripe', 'manual', 'promo'
+  reference TEXT,                      -- e.g. Stripe session ID or admin note
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

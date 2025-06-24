@@ -2,7 +2,8 @@ from entities import (
     check_creds,
     set_password,
     get_interviews_for_org,
-    insert_new_organization
+    insert_new_organization,
+    init_organization_billing
 )
 import random
 
@@ -32,4 +33,6 @@ class OrganizationManager:
         org_id = insert_new_organization(email, display_name, password)
         if not org_id:
             raise ValueError("Email already exists")
+        
+        init_organization_billing(org_id)
         return cls(email, display_name, org_id)

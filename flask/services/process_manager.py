@@ -14,7 +14,8 @@ from entities import (
     set_respondent_score,
     upload_interview,
     summarize_cost,
-    insert_interview_cost
+    insert_interview_cost,
+    deduct_balance
 )
 
 class ProcessManager:
@@ -141,7 +142,17 @@ class ProcessManager:
             data["timecodes"] = timecodes
             set_respondent_score(self.respondent_id, data["summary"]["rate"])
             upload_interview(self.user_id, self.respondent_id, self.interview_id, self.organization_id, data, self.logger)
+
             summarize_cost(self.cost_log, round(time.time() - self.start_time, 2))
+            try:
+                deducted_amount = deduct_balance(
+                    self.organization_id, 
+                    (self.cost_log["processing_time_sec"] / 60)
+                )
+                self.logger.info(f'Deducted ${deducted_amount}')
+            except Exception as e:
+                self.logger.error(f"❌ Billing deduction failed: {e}")
+
             insert_interview_cost(self.respondent_id, self.interview_id, self.organization_id, self.cost_log, self.logger)
             shutil.rmtree(f"temp/{self.user_id}")
             self.logger.info(f"✅ Upload completed")
