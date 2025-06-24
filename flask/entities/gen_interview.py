@@ -49,7 +49,7 @@ Raw text:
     estimated_tokens = len(prompt) // 4
     max_tokens = max(min(int(estimated_tokens * 1.25), 6000), 3000)
 
-    response = respond_with_ai(prompt, openai_client=openai_client, max_tokens=max_tokens)
+    response, cost_in, cost_out = respond_with_ai(prompt, openai_client=openai_client, max_tokens=max_tokens)
 
     try:
         block = extract_json_block(response)
@@ -68,15 +68,15 @@ def detect_language(text, openai_client=None):
 
     if not openai_client:
         openai_client = init_openai()
-        
+    
     short_sample = text.strip()[:50]
     prompt = f"What language is this text written in? Respond only with the ISO-639-1 code like 'en', 'es', 'fr'.\n\n{short_sample}"
-    lang = respond_with_ai(prompt, openai_client)
+    lang, cost_in, cost_out = respond_with_ai(prompt, openai_client)
 
     if lang.strip().lower() not in supported_langs:
         short_sample = text.strip()[:300]
         prompt = f"What language is this text written in? Respond only with the ISO-639-1 code like 'en', 'es', 'fr'.\n\n{short_sample}"
-        lang = respond_with_ai(prompt, openai_client)
+        lang, cost_in, cost_out = respond_with_ai(prompt, openai_client)
 
     if lang.strip().lower() not in supported_langs:
         return "en"
