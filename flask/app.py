@@ -26,6 +26,7 @@ CORS(app,
     origins=[
         "https://talk.getecho.io",
         "https://hub.getecho.io",
+        "https://development.tete-a-tete.ge",
         "https://talk.tete-a-tete.ge",
         "https://hub.tete-a-tete.ge"
     ],
