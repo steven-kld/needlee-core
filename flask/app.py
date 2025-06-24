@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.secret_key = os.getenv("APP_SECRET_KEY")
 
-app.config['SESSION_COOKIE_DOMAIN'] = '.localhost'
+app.config['SESSION_COOKIE_DOMAIN'] = '.tete-a-tete.ge'
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
 
@@ -27,8 +27,7 @@ CORS(app,
         "https://talk.getecho.io",
         "https://hub.getecho.io",
         "https://talk.tete-a-tete.ge",
-        "https://hub.tete-a-tete.ge",
-        "localhost"
+        "https://hub.tete-a-tete.ge"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
