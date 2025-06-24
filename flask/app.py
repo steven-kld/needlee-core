@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.secret_key = os.getenv("APP_SECRET_KEY")
 
-app.config['SESSION_COOKIE_DOMAIN'] = '.tete-a-tete.ge'
+app.config['SESSION_COOKIE_DOMAIN'] = '.localhost'
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
 
