@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from dotenv import load_dotenv
-import threading, uuid, os, traceback
+import threading, uuid, os, traceback, sys
 from services.interview_manager import InterviewManager
 from services.questions_manager import QuestionsManager
 from services.answer_manager import AnswersManager
@@ -20,15 +20,19 @@ app.secret_key = os.getenv("APP_SECRET_KEY")
 app.config['SESSION_COOKIE_DOMAIN'] = '.tete-a-tete.ge'
 app.config['SESSION_COOKIE_SAMESITE'] = 'None'
 app.config['SESSION_COOKIE_SECURE'] = True
+origins = [
+    "https://talk.getecho.io",
+    "https://hub.getecho.io",
+    "https://talk.tete-a-tete.ge",
+    "https://hub.tete-a-tete.ge"
+]
+if '--local' in sys.argv: 
+    origins.append("http://localhost") # Tests only
+    print("Run locally")
 
 CORS(app,
     supports_credentials=True,
-    origins=[
-        "https://talk.getecho.io",
-        "https://hub.getecho.io",
-        "https://talk.tete-a-tete.ge",
-        "https://hub.tete-a-tete.ge"
-    ],
+    origins=origins,
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
 
