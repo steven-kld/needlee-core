@@ -27,7 +27,8 @@ CORS(app,
         "https://talk.getecho.io",
         "https://hub.getecho.io",
         "https://talk.tete-a-tete.ge",
-        "https://hub.tete-a-tete.ge"
+        "https://hub.tete-a-tete.ge",
+        "localhost"
     ],
     allow_headers=["Content-Type"],
     methods=["GET", "POST", "OPTIONS"])
